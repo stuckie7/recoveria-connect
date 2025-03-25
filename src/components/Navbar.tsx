@@ -22,6 +22,12 @@ const Navbar: React.FC = () => {
     setIsOpen(false);
   }, [pathname]);
 
+  // Update the document title based on the current route
+  useEffect(() => {
+    const currentPage = navItems.find(item => item.path === pathname)?.name || 'Not Found';
+    document.title = `Recovery App | ${currentPage}`;
+  }, [pathname]);
+
   if (isMobile) {
     return (
       <>

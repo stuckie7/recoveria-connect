@@ -1,6 +1,16 @@
 
 export type Mood = 'great' | 'good' | 'okay' | 'bad' | 'terrible';
 
+export type SleepQuality = 'excellent' | 'good' | 'fair' | 'poor' | 'terrible';
+
+export type EnergyLevel = 'high' | 'medium' | 'low' | 'depleted';
+
+export type Activity = {
+  type: 'meditation' | 'exercise' | 'therapy' | 'group' | 'other';
+  durationMinutes: number;
+  notes?: string;
+};
+
 export type Trigger = {
   id: string;
   name: string;
@@ -20,6 +30,9 @@ export type CheckIn = {
   id: string;
   date: string;
   mood: Mood;
+  sleepQuality?: SleepQuality;
+  energyLevel?: EnergyLevel;
+  activities?: Activity[];
   triggers: string[]; // Trigger IDs
   notes: string;
   strategies: string[]; // Strategy IDs that were used
