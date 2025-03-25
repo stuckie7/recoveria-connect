@@ -4,7 +4,7 @@ import { Filter, Clock, Heart, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type SortOption = 'recent' | 'popular' | 'trending';
-export type FilterOption = 'all' | 'questions' | 'stories' | 'resources';
+export type FilterOption = 'all' | 'questions' | 'stories' | 'achievements';
 
 interface CommunityFilterProps {
   isFilterOpen: boolean;
@@ -122,15 +122,15 @@ const CommunityFilter: React.FC<CommunityFilterProps> = ({
                 </button>
                 
                 <button 
-                  onClick={() => setFilterBy('resources')}
+                  onClick={() => setFilterBy('achievements')}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-sm",
-                    filterBy === 'resources' 
+                    filterBy === 'achievements' 
                       ? "bg-primary/20 text-primary" 
                       : "bg-white shadow-sm hover:bg-primary/10"
                   )}
                 >
-                  Resources
+                  Achievements
                 </button>
               </div>
             </div>
