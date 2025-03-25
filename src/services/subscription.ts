@@ -35,7 +35,9 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
     
     return data.map(plan => ({
       ...plan,
-      features: plan.features?.features || []
+      // Fix the features parsing - properly extract features from the JSONB
+      features: plan.features && typeof plan.features === 'object' ? 
+        (plan.features.features || []) : []
     }));
   } catch (error) {
     console.error('Error fetching subscription plans:', error);
@@ -97,13 +99,13 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       return null;
     }
     
+    // Fix the function invoke options - remove 'path' property
     const { data: response, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         priceId,
         returnUrl,
       },
       method: 'POST',
-      path: 'create-checkout-session',
     });
     
     if (error) {
@@ -140,13 +142,13 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
       return null;
     }
     
+    // Fix the function invoke options - remove 'path' property
     const { data: response, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         customerId: customerData.stripe_customer_id,
         returnUrl,
       },
       method: 'POST',
-      path: 'create-portal-session',
     });
     
     if (error) {
