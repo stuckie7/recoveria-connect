@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Users, Bookmark, User, Menu, X, LogOut } from 'lucide-react';
+import { Home, Users, Bookmark, User, Menu, X, LogOut, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
