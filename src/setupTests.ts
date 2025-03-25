@@ -30,26 +30,21 @@ declare global {
     interface Matchers<R> {
       toBeInTheDocument(): R;
     }
-    
-    // Add missing Jest types
-    type DoneCallback = (error?: any) => void;
-    class Mock<T = any, Y extends any[] = any> {
-      mockReturnValue(value: T): this;
-      mockImplementation(fn: (...args: Y) => T): this;
-      mockResolvedValue(value: Awaited<T>): this;
-    }
   }
 
+  // Define global test functions
   const describe: (name: string, fn: () => void) => void;
-  const test: (name: string, fn: (done?: jest.DoneCallback) => void | Promise<any>) => void;
+  const test: (name: string, fn: (done?: (error?: any) => void) => void | Promise<any>) => void;
   const it: typeof test;
   const expect: any;
   const beforeEach: (fn: () => void) => void;
   const afterEach: (fn: () => void) => void;
   const beforeAll: (fn: () => void) => void;
   const afterAll: (fn: () => void) => void;
+  
+  // Define Jest global
   const jest: {
-    fn: <T = any>() => jest.Mock<T>;
+    fn: () => any;
     mock: (moduleName: string, factory?: any) => void;
     clearAllMocks: () => void;
   };

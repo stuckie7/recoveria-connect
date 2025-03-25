@@ -68,13 +68,11 @@ export const createTestCheckIns = (days: number, options: {
     let mood: 'great' | 'good' | 'okay' | 'bad' | 'terrible';
     if (moodPattern === 'improving') {
       const moodIndex = Math.min(4, Math.floor(i / 2));
-      // Fixed type issue by explicitly defining the array with proper mood types
       const moodArray: Array<'terrible' | 'bad' | 'okay' | 'good' | 'great'> = 
         ['terrible', 'bad', 'okay', 'good', 'great'];
       mood = moodArray[moodIndex];
     } else if (moodPattern === 'declining') {
       const moodIndex = Math.min(4, Math.floor(i / 2));
-      // Fixed type issue by explicitly defining the array with proper mood types
       const moodArray: Array<'great' | 'good' | 'okay' | 'bad' | 'terrible'> = 
         ['great', 'good', 'okay', 'bad', 'terrible'];
       mood = moodArray[moodIndex];
@@ -104,8 +102,11 @@ export const createTestCheckIns = (days: number, options: {
     }
     
     // Define proper types for sleep quality and energy level
-    const sleepQualityOptions = ['excellent', 'good', 'fair', 'poor', 'terrible'] as const;
-    const energyLevelOptions = ['high', 'medium', 'low', 'depleted'] as const;
+    type SleepQuality = 'excellent' | 'good' | 'fair' | 'poor' | 'terrible';
+    type EnergyLevel = 'high' | 'medium' | 'low' | 'depleted';
+    
+    const sleepQualityOptions: SleepQuality[] = ['excellent', 'good', 'fair', 'poor', 'terrible'];
+    const energyLevelOptions: EnergyLevel[] = ['high', 'medium', 'low', 'depleted'];
     
     checkIns.push({
       id: `checkin-${i}`,
@@ -180,7 +181,7 @@ export const createTestUserProgress = (options: {
   };
 };
 
-// Mock storage access functions
+// Mock storage access functions - without using jest
 export const mockStorageAccess = (progress: any, triggers: Trigger[], strategies: CopingStrategy[]) => {
   // Use a different approach to mock storage functions to avoid Jest reference issues
   return {
