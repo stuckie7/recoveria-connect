@@ -33,12 +33,28 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
       return [];
     }
     
-    return data.map(plan => ({
-      ...plan,
-      // Fix the features parsing - properly extract features from the JSONB
-      features: plan.features && typeof plan.features === 'object' ? 
-        (plan.features.features || []) : []
-    }));
+    return data.map(plan => {
+      // Parse features safely from the JSONB field
+      let features: string[] = [];
+      
+      if (plan.features) {
+        // Try to extract features array from different possible formats
+        if (typeof plan.features === 'object') {
+          if (Array.isArray(plan.features)) {
+            // If features is already an array
+            features = plan.features as string[];
+          } else if (plan.features.features && Array.isArray(plan.features.features)) {
+            // If features is in a nested "features" property
+            features = plan.features.features as string[];
+          }
+        }
+      }
+      
+      return {
+        ...plan,
+        features
+      };
+    });
   } catch (error) {
     console.error('Error fetching subscription plans:', error);
     toast.error('Failed to fetch subscription plans');
