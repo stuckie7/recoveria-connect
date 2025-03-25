@@ -8,6 +8,7 @@ import CommunityStats from '@/components/community/CommunityStats';
 import PostsList from '@/components/community/PostsList';
 import { useCommunityPosts } from '@/hooks/useCommunityPosts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 const Community: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -35,10 +36,22 @@ const Community: React.FC = () => {
   return (
     <div className="py-20 px-4 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2 text-center lg:text-left">Community</h1>
-        <p className="text-muted-foreground mb-6 text-center lg:text-left">
-          Connect with others on the recovery journey
-        </p>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-center lg:text-left">Community</h1>
+            <p className="text-muted-foreground mb-0 text-center lg:text-left">
+              Connect with others on the recovery journey
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => setIsCreateModalOpen(true)} 
+            className="mt-4 lg:mt-0 w-full lg:w-auto"
+          >
+            <Plus size={18} />
+            New Post
+          </Button>
+        </div>
         
         {/* Main tabs for All/Q&A */}
         <Tabs defaultValue="all" className="mb-6" onValueChange={setActiveTab}>
@@ -85,13 +98,27 @@ const Community: React.FC = () => {
             <div className="glass-card mb-6">
               <div className="p-4">
                 <div className="flex flex-col gap-4">
-                  <h2 className="text-xl font-semibold flex items-center">
-                    <MessageSquare className="mr-2" size={20} />
-                    Questions & Answers
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Ask questions, share answers, and help others on their recovery journey
-                  </p>
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+                    <div>
+                      <h2 className="text-xl font-semibold flex items-center">
+                        <MessageSquare className="mr-2" size={20} />
+                        Questions & Answers
+                      </h2>
+                      <p className="text-muted-foreground">
+                        Ask questions, share answers, and help others on their recovery journey
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      onClick={() => setIsCreateModalOpen(true)} 
+                      className="mt-4 md:mt-0"
+                      variant="secondary"
+                    >
+                      <Plus size={18} />
+                      Ask Question
+                    </Button>
+                  </div>
+                  
                   <CommunitySearch 
                     searchTerm={searchTerm} 
                     setSearchTerm={setSearchTerm} 
@@ -112,7 +139,7 @@ const Community: React.FC = () => {
           </TabsContent>
         </Tabs>
         
-        {/* Create post button */}
+        {/* Floating create post button */}
         <div className="fixed bottom-24 right-4 z-30">
           <button 
             className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-primary text-white"
