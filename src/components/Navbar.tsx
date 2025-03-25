@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
   // Update the document title based on the current route
   useEffect(() => {
     const currentPage = navItems.find(item => item.path === pathname)?.name || 'Not Found';
-    document.title = `Recovery App | ${currentPage}`;
+    document.title = `Phoenix | ${currentPage}`;
   }, [pathname]);
 
   const handleSignOut = async () => {
@@ -122,7 +122,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary mr-2"></div>
-            <span className="font-semibold text-lg">Recovery</span>
+            <span className="font-semibold text-lg">Phoenix</span>
           </Link>
           
           <nav className="flex items-center space-x-1">
