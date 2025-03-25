@@ -3,6 +3,8 @@
  * Storage constants for the recovery app
  */
 
+import { Trigger, CopingStrategy } from '@/types';
+
 export const STORAGE_KEYS = {
   USER_PROGRESS: 'recovery-app-progress',
   TRIGGERS: 'recovery-app-triggers',
@@ -10,7 +12,7 @@ export const STORAGE_KEYS = {
 };
 
 // Default triggers
-export const DEFAULT_TRIGGERS = [
+export const DEFAULT_TRIGGERS: Trigger[] = [
   { id: '1', name: 'Stress', category: 'emotional', description: 'Feeling overwhelmed or pressured' },
   { id: '2', name: 'Social gatherings', category: 'social', description: 'Events where substances may be present' },
   { id: '3', name: 'Negative emotions', category: 'emotional', description: 'Sadness, anger, frustration, etc.' },
@@ -22,7 +24,7 @@ export const DEFAULT_TRIGGERS = [
 ];
 
 // Default coping strategies
-export const DEFAULT_STRATEGIES = [
+export const DEFAULT_STRATEGIES: CopingStrategy[] = [
   {
     id: '1',
     name: 'Deep breathing',
