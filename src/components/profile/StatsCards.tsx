@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Calendar, Award, BarChart, Sparkles } from 'lucide-react';
-import { UserProgress } from '@/utils/storage';
+import { UserProgress } from '@/types';
 
 interface StatsCardsProps {
   progress: UserProgress;
