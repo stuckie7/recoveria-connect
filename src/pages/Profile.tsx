@@ -5,8 +5,11 @@ import { cn } from '@/lib/utils';
 import { getUserProgress, setSobrietyStartDate, resetAppData } from '@/utils/storage';
 import { formatDate } from '@/utils/dates';
 import { toast } from 'sonner';
+import AvatarUpload from '@/components/profile/AvatarUpload';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile: React.FC = () => {
+  const { user } = useAuth();
   const [progress, setProgress] = useState(getUserProgress());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(progress.startDate));
@@ -64,9 +67,7 @@ const Profile: React.FC = () => {
         <div className="glass-card mb-6">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-4xl font-bold">
-                U
-              </div>
+              <AvatarUpload size="lg" />
               
               <div className="text-center lg:text-left">
                 <h2 className="text-2xl font-bold mb-1">Your Recovery Journey</h2>
