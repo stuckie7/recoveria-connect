@@ -1,12 +1,14 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Check, ArrowRight } from 'lucide-react';
 import { setSobrietyStartDate } from '@/utils/storage';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [addiction, setAddiction] = useState<string>('');
@@ -24,6 +26,10 @@ const Index = () => {
       setSobrietyStartDate(startDate);
       navigate('/');
     }
+  };
+
+  const navigateToAuth = () => {
+    navigate('/auth');
   };
   
   return (
@@ -99,13 +105,32 @@ const Index = () => {
                 </div>
               </div>
               
-              <button
-                onClick={handleContinue}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium flex items-center justify-center shadow-lg hover:opacity-90 transition-all"
-              >
-                Get Started
-                <ArrowRight size={18} className="ml-2" />
-              </button>
+              {!user ? (
+                <div className="space-y-4">
+                  <Button
+                    onClick={navigateToAuth}
+                    className="w-full py-6 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium flex items-center justify-center shadow-lg hover:opacity-90 transition-all"
+                  >
+                    Sign Up or Login
+                    <ArrowRight size={18} className="ml-2" />
+                  </Button>
+                  <Button
+                    onClick={handleContinue}
+                    variant="outline"
+                    className="w-full py-6"
+                  >
+                    Continue as Guest
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleContinue}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium flex items-center justify-center shadow-lg hover:opacity-90 transition-all"
+                >
+                  Get Started
+                  <ArrowRight size={18} className="ml-2" />
+                </button>
+              )}
             </div>
           )}
           

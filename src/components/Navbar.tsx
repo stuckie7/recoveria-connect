@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Bookmark, User, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Users, Bookmark, User, Menu, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { name: 'Dashboard', path: '/', icon: Home },
@@ -14,8 +16,10 @@ const navItems = [
 
 const Navbar: React.FC = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   // Close mobile menu when navigating
   useEffect(() => {
@@ -27,6 +31,16 @@ const Navbar: React.FC = () => {
     const currentPage = navItems.find(item => item.path === pathname)?.name || 'Not Found';
     document.title = `Recovery App | ${currentPage}`;
   }, [pathname]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  // If there's no user, don't render the navbar
+  if (!user && pathname !== '/welcome') {
+    return null;
+  }
 
   if (isMobile) {
     return (
@@ -63,6 +77,17 @@ const Navbar: React.FC = () => {
                 <span className="text-lg">{item.name}</span>
               </Link>
             ))}
+            
+            {user && (
+              <Button 
+                variant="outline" 
+                className="flex items-center space-x-2" 
+                onClick={handleSignOut}
+              >
+                <LogOut size={20} />
+                <span>Sign Out</span>
+              </Button>
+            )}
           </nav>
         </div>
         
@@ -116,6 +141,18 @@ const Navbar: React.FC = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
+            
+            {user && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 flex items-center space-x-2" 
+                onClick={handleSignOut}
+              >
+                <LogOut size={16} />
+                <span>Sign Out</span>
+              </Button>
+            )}
           </nav>
         </div>
       </div>
