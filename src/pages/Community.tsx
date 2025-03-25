@@ -1,112 +1,170 @@
 
-import React, { useState } from 'react';
-import { MessageSquare, Heart, User, Search, Filter, Clock, TrendingUp, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageSquare, Heart, User, Search, Filter, Clock, TrendingUp, Users, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-// Sample data for community posts
-const SAMPLE_POSTS = [
-  {
-    id: '1',
-    title: '30 Days Sober!',
-    username: 'Hopeful123',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-    content: "I never thought I'd make it this far, but here I am. 30 days sober and feeling stronger than ever. The first two weeks were the hardest, but it gets easier. To anyone just starting out: stick with it, the clarity and peace are worth every difficult moment.",
-    likes: 24,
-    comments: 7,
-    time: '2h ago',
-    tags: ['milestone', 'encouragement']
-  },
-  {
-    id: '2',
-    title: 'Struggling with social events',
-    username: 'JourneyToRecovery',
-    avatar: 'https://i.pravatar.cc/150?img=2',
-    content: 'How do you handle social gatherings where everyone is drinking? I have a wedding coming up and feeling anxious about being the only one not drinking. Any tips for handling the inevitable questions without making things awkward?',
-    likes: 18,
-    comments: 12,
-    time: '5h ago',
-    tags: ['advice', 'social']
-  },
-  {
-    id: '3',
-    title: 'Found a great therapist',
-    username: 'NewBeginnings',
-    avatar: 'https://i.pravatar.cc/150?img=3',
-    content: "After trying a few different therapists, I finally found one who specializes in addiction recovery and it's making such a difference. If you're not clicking with your current therapist, don't give up on therapy altogether - keep looking for the right fit.",
-    likes: 31,
-    comments: 9,
-    time: '12h ago',
-    tags: ['therapy', 'resources']
-  },
-  {
-    id: '4',
-    title: 'One year sober today!',
-    username: 'GratefulHeart',
-    avatar: 'https://i.pravatar.cc/150?img=4',
-    content: "I can't believe I'm writing this, but today marks one full year of sobriety. Looking back, I barely recognize the person I was. To anyone in their early days: it IS possible. Take it one day at a time, and before you know it, those days add up to something beautiful.",
-    likes: 87,
-    comments: 42,
-    time: '1d ago',
-    tags: ['milestone', 'celebration', 'oneyear']
-  },
-  {
-    id: '5',
-    title: 'Dealing with triggers',
-    username: 'StepByStep',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-    content: 'Had a really stressful day at work and the urge to drink hit me hard. Instead, I went for a long run, took a hot shower, and called my sponsor. It worked, but these moments still scare me. How do you all deal with unexpected, strong triggers?',
-    likes: 14,
-    comments: 21,
-    time: '1d ago',
-    tags: ['triggers', 'coping', 'advice']
-  }
-];
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import CreatePostModal from '@/components/CreatePostModal';
+import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 
 type SortOption = 'recent' | 'popular' | 'trending';
 type FilterOption = 'all' | 'questions' | 'stories' | 'resources';
 
+type CommunityPost = {
+  id: string;
+  title: string;
+  content: string;
+  type: string;
+  created_at: string;
+  user_id: string;
+  likes: number;
+  comments: number;
+  tags: string[];
+  username?: string;
+  avatar_url?: string;
+};
+
 const Community: React.FC = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  // Function to fetch posts from Supabase
+  const fetchPosts = async (): Promise<CommunityPost[]> => {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      throw error;
+    }
+
+    // Fetch user details for each post
+    const postsWithUserDetails = await Promise.all(
+      data.map(async (post) => {
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', post.user_id)
+          .single();
+        
+        if (!userError && userData) {
+          return { 
+            ...post, 
+            username: userData.username || 'Anonymous User',
+            avatar_url: userData.avatar_url || `https://i.pravatar.cc/150?u=${post.user_id}` 
+          };
+        }
+        
+        return { 
+          ...post, 
+          username: 'Anonymous User',
+          avatar_url: `https://i.pravatar.cc/150?u=${post.user_id}` 
+        };
+      })
+    );
+    
+    return postsWithUserDetails;
+  };
+
+  // Use React Query to fetch posts
+  const { data: posts, isLoading, isError, refetch } = useQuery({
+    queryKey: ['communityPosts'],
+    queryFn: fetchPosts,
+  });
   
   // Filter and sort posts
-  const filteredPosts = SAMPLE_POSTS
-    .filter(post => {
-      // Apply search term filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          post.title.toLowerCase().includes(searchLower) || 
-          post.content.toLowerCase().includes(searchLower) ||
-          post.username.toLowerCase().includes(searchLower) ||
-          post.tags.some(tag => tag.includes(searchLower))
-        );
+  const filteredPosts = posts
+    ? posts
+        .filter(post => {
+          // Apply search term filter
+          if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            return (
+              post.title.toLowerCase().includes(searchLower) || 
+              post.content.toLowerCase().includes(searchLower) ||
+              post.username?.toLowerCase().includes(searchLower) ||
+              post.tags?.some(tag => tag?.toLowerCase().includes(searchLower))
+            );
+          }
+          return true;
+        })
+        .filter(post => {
+          // Apply category filter
+          if (filterBy === 'all') return true;
+          if (filterBy === 'questions' && post.type === 'question') return true;
+          if (filterBy === 'stories' && post.type === 'story') return true;
+          if (filterBy === 'resources' && post.type === 'resource') return true;
+          return false;
+        })
+        .sort((a, b) => {
+          // Apply sorting
+          if (sortBy === 'recent') {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          if (sortBy === 'popular') {
+            return b.likes - a.likes;
+          }
+          if (sortBy === 'trending') {
+            return (b.likes + b.comments) - (a.likes + a.comments);
+          }
+          return 0;
+        })
+    : [];
+
+  // Handle like functionality  
+  const handleLikePost = async (postId: string) => {
+    const { data: session } = await supabase.auth.getSession();
+    
+    if (!session.session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to like posts",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const post = posts?.find(p => p.id === postId);
+    
+    if (post) {
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ likes: post.likes + 1 })
+        .eq('id', postId);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to like post",
+          variant: "destructive"
+        });
+      } else {
+        refetch();
       }
-      return true;
-    })
-    .filter(post => {
-      // Apply category filter
-      if (filterBy === 'all') return true;
-      if (filterBy === 'questions' && post.title.includes('?')) return true;
-      if (filterBy === 'stories' && post.tags.includes('milestone')) return true;
-      if (filterBy === 'resources' && post.tags.includes('resources')) return true;
-      return false;
-    })
-    .sort((a, b) => {
-      // Apply sorting
-      if (sortBy === 'recent') {
-        return 0; // Already sorted by recent in our data
-      }
-      if (sortBy === 'popular') {
-        return b.likes - a.likes;
-      }
-      if (sortBy === 'trending') {
-        return (b.likes + b.comments) - (a.likes + a.comments);
-      }
-      return 0;
-    });
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else if (diffInHours < 48) {
+      return 'Yesterday';
+    } else {
+      return format(date, 'MMM d');
+    }
+  };
   
   return (
     <div className="py-20 px-4 min-h-screen">
@@ -268,7 +326,7 @@ const Community: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-medium">Discussions</h4>
-              <p className="text-2xl font-semibold">1,452</p>
+              <p className="text-2xl font-semibold">{posts?.length || '0'}</p>
             </div>
           </div>
           
@@ -285,7 +343,21 @@ const Community: React.FC = () => {
         
         {/* Posts list */}
         <div className="space-y-4">
-          {filteredPosts.length > 0 ? (
+          {isLoading ? (
+            <div className="glass-card p-8 text-center">
+              <h3 className="text-lg font-medium mb-2">Loading posts...</h3>
+              <p className="text-muted-foreground">
+                Please wait while we fetch the latest discussions.
+              </p>
+            </div>
+          ) : isError ? (
+            <div className="glass-card p-8 text-center">
+              <h3 className="text-lg font-medium mb-2">Something went wrong</h3>
+              <p className="text-muted-foreground">
+                There was an error loading the community posts. Please try again.
+              </p>
+            </div>
+          ) : filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
               <div 
                 key={post.id} 
@@ -296,16 +368,19 @@ const Community: React.FC = () => {
                     <div className="flex items-center">
                       <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
                         <img 
-                          src={post.avatar} 
+                          src={post.avatar_url} 
                           alt={post.username} 
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div>
                         <h3 className="font-medium">{post.username}</h3>
-                        <span className="text-xs text-muted-foreground">{post.time}</span>
+                        <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
                       </div>
                     </div>
+                    <span className="text-xs px-2 py-1 bg-muted rounded-full">
+                      {post.type}
+                    </span>
                   </div>
                   
                   <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
@@ -313,7 +388,7 @@ const Community: React.FC = () => {
                   <p className="text-foreground/80 mb-4">{post.content}</p>
                   
                   {/* Tags */}
-                  {post.tags.length > 0 && (
+                  {post.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {post.tags.map(tag => (
                         <span 
@@ -328,15 +403,18 @@ const Community: React.FC = () => {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <button className="flex items-center text-muted-foreground hover:text-rose-500 transition-colors">
+                      <button 
+                        className="flex items-center text-muted-foreground hover:text-rose-500 transition-colors"
+                        onClick={() => handleLikePost(post.id)}
+                      >
                         <Heart size={18} className="mr-1" />
                         <span>{post.likes}</span>
                       </button>
                       
-                      <button className="flex items-center text-muted-foreground hover:text-primary transition-colors">
+                      <div className="flex items-center text-muted-foreground">
                         <MessageSquare size={18} className="mr-1" />
                         <span>{post.comments}</span>
-                      </button>
+                      </div>
                     </div>
                     
                     <button className="text-sm text-primary hover:underline">
@@ -358,11 +436,22 @@ const Community: React.FC = () => {
         
         {/* Create post button */}
         <div className="fixed bottom-24 right-4 z-30">
-          <button className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-primary text-white">
-            <MessageSquare size={24} />
+          <button 
+            className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-primary text-white"
+            onClick={() => setIsCreateModalOpen(true)}
+            aria-label="Create new post"
+          >
+            <Plus size={24} />
           </button>
         </div>
       </div>
+
+      {/* Create Post Modal */}
+      <CreatePostModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 };
