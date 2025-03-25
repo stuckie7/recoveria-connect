@@ -1,4 +1,3 @@
-
 export type Mood = 'great' | 'good' | 'okay' | 'bad' | 'terrible';
 
 export type SleepQuality = 'excellent' | 'good' | 'fair' | 'poor' | 'terrible';
@@ -61,13 +60,16 @@ export type UserProgress = {
 
 export type CommunityPost = {
   id: string;
-  userId: string;
-  username: string;
-  avatar?: string;
+  title: string;
   content: string;
-  date: string;
+  type: string;
+  created_at: string;
+  user_id: string;
   likes: number;
   comments: number;
+  tags: string[];
+  username?: string;
+  avatar_url?: string;
 };
 
 export type Resource = {

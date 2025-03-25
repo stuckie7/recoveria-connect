@@ -17,6 +17,7 @@ export type Database = {
           id: string
           likes: number | null
           tags: string[] | null
+          title: string | null
           type: string
           user_id: string
         }
@@ -27,6 +28,7 @@ export type Database = {
           id?: string
           likes?: number | null
           tags?: string[] | null
+          title?: string | null
           type: string
           user_id: string
         }
@@ -37,6 +39,7 @@ export type Database = {
           id?: string
           likes?: number | null
           tags?: string[] | null
+          title?: string | null
           type?: string
           user_id?: string
         }
