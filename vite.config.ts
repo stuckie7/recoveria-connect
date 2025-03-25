@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     sourcemap: true,
+    emptyOutDir: true,
   },
   plugins: [
     react(),
@@ -24,4 +25,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: "./",
 }));
