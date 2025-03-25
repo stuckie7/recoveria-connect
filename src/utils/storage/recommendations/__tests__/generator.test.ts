@@ -25,10 +25,10 @@ describe('Recommendation Generator', () => {
     });
     const progress = createTestUserProgress({ daysSince: 45, checkIns });
     
-    // Setup mocks
-    (getUserProgress as jest.Mock).mockReturnValue(progress);
-    (getTriggers as jest.Mock).mockReturnValue(testTriggers);
-    (getCopingStrategies as jest.Mock).mockReturnValue(testStrategies);
+    // Setup mocks - use type assertions to avoid TypeScript errors
+    (getUserProgress as any).mockReturnValue(progress);
+    (getTriggers as any).mockReturnValue(testTriggers);
+    (getCopingStrategies as any).mockReturnValue(testStrategies);
     
     // Generate recommendations
     const recommendations = generateRecommendations(testResources);
@@ -46,10 +46,10 @@ describe('Recommendation Generator', () => {
     const checkIns = createTestCheckIns(2, {});
     const progress = createTestUserProgress({ daysSince: 3, checkIns });
     
-    // Setup mocks
-    (getUserProgress as jest.Mock).mockReturnValue(progress);
-    (getTriggers as jest.Mock).mockReturnValue(testTriggers);
-    (getCopingStrategies as jest.Mock).mockReturnValue(testStrategies);
+    // Setup mocks - use type assertions to avoid TypeScript errors
+    (getUserProgress as any).mockReturnValue(progress);
+    (getTriggers as any).mockReturnValue(testTriggers);
+    (getCopingStrategies as any).mockReturnValue(testStrategies);
     
     // Generate recommendations
     const recommendations = generateRecommendations(testResources);
@@ -64,10 +64,10 @@ describe('Recommendation Generator', () => {
     // Create a user with no check-ins
     const progress = createTestUserProgress({ daysSince: 1, checkIns: [] });
     
-    // Setup mocks
-    (getUserProgress as jest.Mock).mockReturnValue(progress);
-    (getTriggers as jest.Mock).mockReturnValue(testTriggers);
-    (getCopingStrategies as jest.Mock).mockReturnValue(testStrategies);
+    // Setup mocks - use type assertions to avoid TypeScript errors
+    (getUserProgress as any).mockReturnValue(progress);
+    (getTriggers as any).mockReturnValue(testTriggers);
+    (getCopingStrategies as any).mockReturnValue(testStrategies);
     
     // Generate recommendations
     const recommendations = generateRecommendations(testResources);
