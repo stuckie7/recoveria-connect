@@ -68,15 +68,22 @@ export const createTestCheckIns = (days: number, options: {
     let mood: 'great' | 'good' | 'okay' | 'bad' | 'terrible';
     if (moodPattern === 'improving') {
       const moodIndex = Math.min(4, Math.floor(i / 2));
-      mood = ['terrible', 'bad', 'okay', 'good', 'great'][moodIndex];
+      // Fixed type issue by explicitly defining the array with proper mood types
+      const moodArray: Array<'terrible' | 'bad' | 'okay' | 'good' | 'great'> = 
+        ['terrible', 'bad', 'okay', 'good', 'great'];
+      mood = moodArray[moodIndex];
     } else if (moodPattern === 'declining') {
       const moodIndex = Math.min(4, Math.floor(i / 2));
-      mood = ['great', 'good', 'okay', 'bad', 'terrible'][moodIndex];
+      // Fixed type issue by explicitly defining the array with proper mood types
+      const moodArray: Array<'great' | 'good' | 'okay' | 'bad' | 'terrible'> = 
+        ['great', 'good', 'okay', 'bad', 'terrible'];
+      mood = moodArray[moodIndex];
     } else if (moodPattern === 'stable') {
       mood = 'okay';
     } else {
       // Mixed/random
-      const moodOptions = ['great', 'good', 'okay', 'bad', 'terrible'];
+      const moodOptions: Array<'great' | 'good' | 'okay' | 'bad' | 'terrible'> = 
+        ['great', 'good', 'okay', 'bad', 'terrible'];
       mood = moodOptions[Math.floor(Math.random() * moodOptions.length)];
     }
     
@@ -96,12 +103,16 @@ export const createTestCheckIns = (days: number, options: {
       strategies.push(`strategy${Math.floor(Math.random() * 4) + 1}`);
     }
     
+    // Define proper types for sleep quality and energy level
+    const sleepQualityOptions = ['excellent', 'good', 'fair', 'poor', 'terrible'] as const;
+    const energyLevelOptions = ['high', 'medium', 'low', 'depleted'] as const;
+    
     checkIns.push({
       id: `checkin-${i}`,
       date: date.toISOString(),
       mood,
-      sleepQuality: ['excellent', 'good', 'fair', 'poor', 'terrible'][Math.floor(Math.random() * 5)],
-      energyLevel: ['high', 'medium', 'low', 'depleted'][Math.floor(Math.random() * 4)],
+      sleepQuality: sleepQualityOptions[Math.floor(Math.random() * sleepQualityOptions.length)],
+      energyLevel: energyLevelOptions[Math.floor(Math.random() * energyLevelOptions.length)],
       triggers,
       notes: `Test check-in for day ${i}`,
       strategies,
@@ -171,10 +182,10 @@ export const createTestUserProgress = (options: {
 
 // Mock storage access functions
 export const mockStorageAccess = (progress: any, triggers: Trigger[], strategies: CopingStrategy[]) => {
-  // Mock the storage access functions
-  jest.mock('@/utils/storage', () => ({
-    getUserProgress: jest.fn().mockReturnValue(progress),
-    getTriggers: jest.fn().mockReturnValue(triggers),
-    getCopingStrategies: jest.fn().mockReturnValue(strategies),
-  }));
+  // Use a different approach to mock storage functions to avoid Jest reference issues
+  return {
+    getUserProgress: () => progress,
+    getTriggers: () => triggers,
+    getCopingStrategies: () => strategies
+  };
 };

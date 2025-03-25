@@ -22,4 +22,25 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 });
 
+// Add global Jest type declarations to avoid TypeScript errors
+// This is needed because we're using Jest in a TypeScript environment
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toBeInTheDocument(): R;
+    }
+  }
+
+  const describe: (name: string, fn: () => void) => void;
+  const test: (name: string, fn: (done?: jest.DoneCallback) => void | Promise<any>) => void;
+  const it: typeof test;
+  const expect: any;
+  const beforeEach: (fn: () => void) => void;
+  const afterEach: (fn: () => void) => void;
+  const beforeAll: (fn: () => void) => void;
+  const afterAll: (fn: () => void) => void;
+  const jest: any;
+}
+
 // Add any global test setup here
