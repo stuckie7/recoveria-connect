@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,24 +11,33 @@ interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultType?: PostType;
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  defaultType = 'story'
 }) => {
   const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [type, setType] = useState<PostType>('story');
+  const [type, setType] = useState<PostType>(defaultType);
   const [tags, setTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update type when defaultType changes
+  useEffect(() => {
+    if (defaultType) {
+      setType(defaultType);
+    }
+  }, [defaultType]);
 
   const resetForm = () => {
     setTitle('');
     setContent('');
-    setType('story');
+    setType(defaultType);
     setTags([]);
   };
 
@@ -67,7 +76,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
       toast({
         title: "Success!",
-        description: "Your post has been published.",
+        description: type === "question" 
+          ? "Your question has been published to the community."
+          : "Your post has been published.",
       });
 
       resetForm();
@@ -88,7 +99,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create a New Post</DialogTitle>
+          <DialogTitle>
+            {type === 'question' ? 'Ask a Question' : 'Create a New Post'}
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
@@ -116,7 +129,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Publishing...' : 'Publish Post'}
+              {isSubmitting ? 'Publishing...' : (type === 'question' ? 'Ask Question' : 'Publish Post')}
             </Button>
           </DialogFooter>
         </form>

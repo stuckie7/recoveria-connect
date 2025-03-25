@@ -1,15 +1,17 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { Heart, MessageSquare } from 'lucide-react';
+import { Heart, MessageSquare, HelpCircle } from 'lucide-react';
 import { CommunityPost } from '@/types';
+import { Badge } from '@/components/ui/badge';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
   onLike: (postId: string) => void;
+  isQAPost?: boolean;
 }
 
-const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onLike }) => {
+const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onLike, isQAPost = false }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -27,7 +29,7 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onLike }) =
   };
 
   return (
-    <div className="glass-card overflow-hidden transition-all hover:shadow-lg hover:border-primary/30 animate-fade-in">
+    <div className={`glass-card overflow-hidden transition-all hover:shadow-lg ${isQAPost ? 'hover:border-primary/50' : 'hover:border-primary/30'} animate-fade-in`}>
       <div className="p-5">
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-center">
@@ -43,12 +45,22 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onLike }) =
               <span className="text-xs text-muted-foreground">{formatDate(post.created_at)}</span>
             </div>
           </div>
-          <span className="text-xs px-2 py-1 bg-muted rounded-full">
-            {post.type}
-          </span>
+          
+          {isQAPost ? (
+            <Badge variant="outline" className="bg-primary/10 text-primary">
+              <HelpCircle size={14} className="mr-1" /> Question
+            </Badge>
+          ) : (
+            <span className="text-xs px-2 py-1 bg-muted rounded-full">
+              {post.type}
+            </span>
+          )}
         </div>
         
-        <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+        <h2 className={`text-xl font-semibold mb-2 ${isQAPost ? 'text-primary' : ''}`}>
+          {isQAPost && <HelpCircle size={16} className="inline mr-2 text-primary" />}
+          {post.title}
+        </h2>
         
         <p className="text-foreground/80 mb-4">{post.content}</p>
         
@@ -82,8 +94,8 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onLike }) =
             </div>
           </div>
           
-          <button className="text-sm text-primary hover:underline">
-            View Discussion
+          <button className={`text-sm ${isQAPost ? 'text-primary font-medium' : 'text-primary'} hover:underline`}>
+            {isQAPost ? 'Answer Question' : 'View Discussion'}
           </button>
         </div>
       </div>
