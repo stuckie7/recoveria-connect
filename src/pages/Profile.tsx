@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { toast } from 'sonner';
-import { getUserProgress, setSobrietyStartDate, resetAppData } from '@/utils/storage';
+import { resetAppData } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSobrietyDate } from '@/hooks/useSobrietyDate';
 
-// Import the new component files
+// Import the component files
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import DatePicker from '@/components/profile/DatePicker';
 import StatsCards from '@/components/profile/StatsCards';
@@ -14,42 +15,24 @@ import DangerZone from '@/components/profile/DangerZone';
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
-  const [progress, setProgress] = useState(getUserProgress());
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(progress.startDate));
+  const { 
+    progress, 
+    setProgress,
+    isDatePickerOpen, 
+    setIsDatePickerOpen,
+    selectedDate,
+    handleDateChange,
+    handleSaveDate
+  } = useSobrietyDate();
   
   useEffect(() => {
-    setProgress(getUserProgress());
+    // The initial progress is already set in the hook
   }, []);
-  
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const date = new Date(event.target.value);
-    setSelectedDate(date);
-  };
-  
-  const handleSaveDate = () => {
-    if (selectedDate > new Date()) {
-      toast.error('Start date cannot be in the future');
-      return;
-    }
-    
-    setSobrietyStartDate(selectedDate);
-    setProgress(getUserProgress());
-    setIsDatePickerOpen(false);
-    
-    toast.success('Sobriety date updated', {
-      description: `Your journey now starts from ${selectedDate.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })}`
-    });
-  };
   
   const handleResetApp = () => {
     if (window.confirm('Are you sure you want to reset all app data? This cannot be undone.')) {
       resetAppData();
-      setProgress(getUserProgress());
+      setProgress(resetAppData());
       
       toast.success('App data reset', {
         description: 'All your data has been reset to default values.'
