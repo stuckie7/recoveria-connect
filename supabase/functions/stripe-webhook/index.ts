@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Stripe } from "https://esm.sh/stripe@12.4.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,13 +113,6 @@ async function handleStripeWebhook(req: Request, stripe: Stripe) {
         // Fetch customer information
         const customer = await stripe.customers.retrieve(session.customer);
         
-        // Get plan information
-        const { data: planData } = await supabaseAdmin
-          .from("subscription_plans")
-          .select("id")
-          .eq("stripe_price_id", session.line_items.data[0].price.id)
-          .single();
-          
         // Find user by email
         const { data: userData } = await supabaseAdmin
           .from("profiles")
@@ -126,14 +120,30 @@ async function handleStripeWebhook(req: Request, stripe: Stripe) {
           .eq("email", customer.email)
           .single();
           
+        if (!userData) {
+          console.error("User not found for email:", customer.email);
+          break;
+        }
+        
+        // Update user's stripe_customer_id if it's not set
+        await supabaseAdmin
+          .from("profiles")
+          .update({ 
+            stripe_customer_id: session.customer,
+            is_premium: true 
+          })
+          .eq("id", userData.id);
+          
+        // Get subscription details
+        const subscription = await stripe.subscriptions.retrieve(session.subscription);
+        
         // Insert subscription record
         await supabaseAdmin.from("subscriptions").insert({
           user_id: userData.id,
-          plan_id: planData.id,
-          status: "active",
-          stripe_subscription_id: session.subscription,
-          current_period_start: new Date(session.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(session.current_period_end * 1000).toISOString(),
+          status: subscription.status,
+          stripe_subscription_id: subscription.id,
+          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         });
         
         break;
@@ -141,6 +151,18 @@ async function handleStripeWebhook(req: Request, stripe: Stripe) {
       case "customer.subscription.updated": {
         const subscription = event.data.object;
         
+        // Find user by Stripe customer ID
+        const { data: userData } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("stripe_customer_id", subscription.customer)
+          .single();
+          
+        if (!userData) {
+          console.error("User not found for customer:", subscription.customer);
+          break;
+        }
+          
         // Update subscription status
         await supabaseAdmin.from("subscriptions")
           .update({
@@ -152,15 +174,39 @@ async function handleStripeWebhook(req: Request, stripe: Stripe) {
           })
           .eq("stripe_subscription_id", subscription.id);
           
+        // Update user's premium status
+        await supabaseAdmin
+          .from("profiles")
+          .update({ is_premium: subscription.status === "active" })
+          .eq("id", userData.id);
+          
         break;
       }
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
         
+        // Find user by Stripe customer ID
+        const { data: userData } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("stripe_customer_id", subscription.customer)
+          .single();
+          
+        if (!userData) {
+          console.error("User not found for customer:", subscription.customer);
+          break;
+        }
+        
         // Update subscription status to canceled
         await supabaseAdmin.from("subscriptions")
           .update({ status: "canceled" })
           .eq("stripe_subscription_id", subscription.id);
+          
+        // Update user's premium status
+        await supabaseAdmin
+          .from("profiles")
+          .update({ is_premium: false })
+          .eq("id", userData.id);
           
         break;
       }
@@ -198,10 +244,15 @@ async function createCheckoutSession(data: any, stripe: Stripe) {
       );
     }
 
+    // Use the provided price ID or default to the one saved in config
+    const finalPriceId = priceId === "price_premium" ? "price_1R6NsyE99jBtZ4QEdVq5iGuA" : priceId;
+
+    console.log(`Creating checkout session with price ID: ${finalPriceId}`);
+    
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
-          price: priceId,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
@@ -265,54 +316,4 @@ async function createPortalSession(data: any, stripe: Stripe) {
       }
     );
   }
-}
-
-// Helper function to create a Supabase client
-function createClient(supabaseUrl, supabaseKey) {
-  return {
-    from: (table) => ({
-      select: (columns) => ({
-        eq: (column, value) => ({
-          single: () => {
-            // Implementation would depend on further Deno/Supabase API access
-            // Simplified placeholder to represent the pattern
-            return fetch(`${supabaseUrl}/rest/v1/${table}?select=${columns}&${column}=eq.${value}&limit=1`, {
-              headers: {
-                "Content-Type": "application/json",
-                "apikey": supabaseKey,
-                "Authorization": `Bearer ${supabaseKey}`
-              }
-            }).then(res => res.json())
-              .then(data => ({ data: data[0] }));
-          }
-        })
-      }),
-      insert: (data) => {
-        return fetch(`${supabaseUrl}/rest/v1/${table}`, {
-          method: 'POST',
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": supabaseKey,
-            "Authorization": `Bearer ${supabaseKey}`,
-            "Prefer": "return=minimal"
-          },
-          body: JSON.stringify(data)
-        });
-      },
-      update: (data) => ({
-        eq: (column, value) => {
-          return fetch(`${supabaseUrl}/rest/v1/${table}?${column}=eq.${value}`, {
-            method: 'PATCH',
-            headers: {
-              "Content-Type": "application/json",
-              "apikey": supabaseKey,
-              "Authorization": `Bearer ${supabaseKey}`,
-              "Prefer": "return=minimal"
-            },
-            body: JSON.stringify(data)
-          });
-        }
-      })
-    })
-  };
 }

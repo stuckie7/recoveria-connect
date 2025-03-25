@@ -16,7 +16,10 @@ const SubscriptionPlans: React.FC = () => {
       return;
     }
     
-    const checkoutUrl = await subscribe(priceId);
+    // For premium plan, always use the hardcoded price ID
+    const finalPriceId = priceId === "price_premium" ? "price_1R6NsyE99jBtZ4QEdVq5iGuA" : priceId;
+    
+    const checkoutUrl = await subscribe(finalPriceId);
     if (!checkoutUrl) {
       toast.error('Failed to start subscription process');
     }
@@ -30,6 +33,35 @@ const SubscriptionPlans: React.FC = () => {
     );
   }
 
+  // If no plans are loaded, create default plans
+  const displayPlans = plans.length > 0 ? plans : [
+    {
+      id: 'basic',
+      name: 'Basic',
+      description: 'Free tier with limited features',
+      price: 0,
+      interval: 'month',
+      features: ['Basic recovery tracking', 'Daily check-ins', 'Community access'],
+      stripe_price_id: ''
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      description: 'Full access to all recovery tools',
+      price: 9.99,
+      interval: 'month',
+      features: [
+        'Everything in Basic',
+        'Advanced analytics',
+        'Personalized recommendations',
+        'Trigger tracking',
+        'Premium resources',
+        'Priority support'
+      ],
+      stripe_price_id: 'price_1R6NsyE99jBtZ4QEdVq5iGuA'
+    }
+  ];
+
   return (
     <div className="space-y-8">
       <div>
@@ -40,7 +72,7 @@ const SubscriptionPlans: React.FC = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {plans.map((plan) => {
+        {displayPlans.map((plan) => {
           const isCurrentPlan = subscription && isPremium && plan.name === 'Premium';
           const isFree = plan.price === 0;
           
