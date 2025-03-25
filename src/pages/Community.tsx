@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import CreatePostModal from '@/components/CreatePostModal';
+import CreatePostModal from '@/components/community/CreatePostModal';
 import CommunitySearch from '@/components/community/CommunitySearch';
 import CommunityFilter from '@/components/community/CommunityFilter';
 import CommunityStats from '@/components/community/CommunityStats';
