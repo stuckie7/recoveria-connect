@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { getUserProgress, setSobrietyStartDate } from '@/utils/storage';
+import { UserProgress } from '@/types';
 
 export function useSobrietyDate() {
-  const [progress, setProgress] = useState(getUserProgress());
+  const [progress, setProgress] = useState<UserProgress>(getUserProgress());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(progress.startDate));
   
@@ -40,6 +41,7 @@ export function useSobrietyDate() {
 
   return {
     progress,
+    setProgress,
     isDatePickerOpen,
     setIsDatePickerOpen,
     selectedDate,

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { toast } from 'sonner';
-import { resetAppData } from '@/utils/storage';
+import { resetAppData, getUserProgress } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSobrietyDate } from '@/hooks/useSobrietyDate';
 
@@ -23,12 +23,15 @@ const Profile: React.FC = () => {
     setIsDatePickerOpen,
     selectedDate,
     handleDateChange,
-    handleSaveDate
+    handleSaveDate,
+    setProgress
   } = useSobrietyDate();
   
   const handleResetApp = () => {
     if (window.confirm('Are you sure you want to reset all app data? This cannot be undone.')) {
-      const resetData = resetAppData();
+      resetAppData();
+      // After resetting the app data, we need to update our progress state with the new data
+      setProgress(getUserProgress());
       
       toast.success('App data reset', {
         description: 'All your data has been reset to default values.'
