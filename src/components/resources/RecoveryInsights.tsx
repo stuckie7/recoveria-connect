@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Lightbulb, ChevronRight, ChevronDown } from 'lucide-react';
 import { Resource } from '@/types';
 import { generateRecommendations, getResourcesByIds, Recommendation, RecommendationType } from '@/utils/storage/recommendations';
+import PremiumFeature from '@/components/subscription/PremiumFeature';
 
 interface RecoveryInsightsProps {
   resources: Resource[];
@@ -31,11 +32,11 @@ const RecoveryInsights: React.FC<RecoveryInsightsProps> = ({ resources, onSelect
     return null;
   }
   
-  const renderRecommendationGroup = (type: RecommendationType, title: string) => {
+  const renderRecommendationGroup = (type: RecommendationType, title: string, isPremium: boolean = false) => {
     const recs = groupedRecommendations[type];
     if (recs.length === 0) return null;
     
-    return (
+    const recommendationContent = (
       <div className="mb-4">
         <h4 className="text-sm font-medium mb-2">{title}</h4>
         {recs.map(rec => (
@@ -57,6 +58,26 @@ const RecoveryInsights: React.FC<RecoveryInsightsProps> = ({ resources, onSelect
         ))}
       </div>
     );
+
+    // If this is a premium feature, wrap it in the PremiumFeature component
+    if (isPremium) {
+      return (
+        <PremiumFeature fallback={
+          <div className="mb-4">
+            <h4 className="text-sm font-medium mb-2">{title} <span className="text-xs text-primary font-bold">(Premium)</span></h4>
+            <div className="glass-card p-3 mb-3 bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                Upgrade to premium to access personalized {title.toLowerCase()}.
+              </p>
+            </div>
+          </div>
+        }>
+          {recommendationContent}
+        </PremiumFeature>
+      );
+    }
+    
+    return recommendationContent;
   };
   
   return (
@@ -82,10 +103,10 @@ const RecoveryInsights: React.FC<RecoveryInsightsProps> = ({ resources, onSelect
       
       {isExpanded && (
         <div className="px-4 pb-4 animate-fade-in">
-          {renderRecommendationGroup('mood', 'Based on your mood trends')}
-          {renderRecommendationGroup('triggers', 'Based on your triggers')}
-          {renderRecommendationGroup('strategy', 'Suggested coping strategies')}
           {renderRecommendationGroup('general', 'General recommendations')}
+          {renderRecommendationGroup('mood', 'Based on your mood trends', true)}
+          {renderRecommendationGroup('triggers', 'Based on your triggers', true)}
+          {renderRecommendationGroup('strategy', 'Suggested coping strategies', true)}
           {renderRecommendationGroup('education', 'Educational resources')}
         </div>
       )}
