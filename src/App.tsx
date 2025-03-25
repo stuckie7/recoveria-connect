@@ -9,7 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import EmergencySupport from "./components/EmergencySupport";
 import PrivateRoute from "./components/PrivateRoute";
-import Index from "./pages/Index";
+import WelcomePage from "./pages/welcome/WelcomePage";
 import Dashboard from "./pages/Dashboard";
 import Community from "./pages/Community";
 import Resources from "./pages/Resources";
@@ -31,7 +31,7 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/welcome" element={<Index />} />
+              <Route path="/welcome" element={<WelcomePage />} />
               <Route path="/404" element={<NotFound />} />
               
               {/* Protected routes */}
