@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Lightbulb, ChevronRight, ChevronDown } from 'lucide-react';
 import { Resource } from '@/types';
-import { generateRecommendations, getResourcesByIds, Recommendation, RecommendationType } from '@/utils/storage/resources';
+import { generateRecommendations, getResourcesByIds, Recommendation, RecommendationType } from '@/utils/storage/recommendations';
 
 interface RecoveryInsightsProps {
   resources: Resource[];

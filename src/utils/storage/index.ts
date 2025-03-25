@@ -8,6 +8,7 @@ export * from './constants';
 export * from './userProgress';
 export * from './triggers';
 export * from './strategies';
+export * from './resources';
 
 /**
  * Reset all app data (for testing purposes)
