@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 const SubscriptionPlans: React.FC = () => {
   const { user } = useAuth();
-  const { plans, subscription, isPremium, isLoading, subscribe } = useSubscription();
+  const { plans, subscription, isPremium, isLoading, subscribe, manageSubscription } = useSubscription();
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
@@ -22,6 +22,18 @@ const SubscriptionPlans: React.FC = () => {
     const checkoutUrl = await subscribe(finalPriceId);
     if (!checkoutUrl) {
       toast.error('Failed to start subscription process');
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    if (!user) {
+      toast.error('You must be logged in to manage your subscription');
+      return;
+    }
+    
+    const portalUrl = await manageSubscription();
+    if (!portalUrl) {
+      toast.error('Failed to open subscription management portal');
     }
   };
 
@@ -70,6 +82,27 @@ const SubscriptionPlans: React.FC = () => {
           Choose the plan that best fits your recovery journey
         </p>
       </div>
+
+      {subscription && (
+        <div className="glass-card p-4 border-l-4 border-primary">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-medium">Current Subscription</h3>
+              <p className="text-sm text-muted-foreground">
+                {isPremium ? 'Premium plan active' : 'Basic plan'}
+              </p>
+            </div>
+            {isPremium && (
+              <Button 
+                variant="outline" 
+                onClick={handleManageSubscription}
+              >
+                Manage Subscription
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {displayPlans.map((plan) => {
