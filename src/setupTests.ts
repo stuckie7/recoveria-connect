@@ -43,11 +43,7 @@ declare global {
   const afterAll: (fn: () => void) => void;
   
   // Define Jest global
-  const jest: {
-    fn: () => any;
-    mock: (moduleName: string, factory?: any) => void;
-    clearAllMocks: () => void;
-  };
+  const jest: any;
 }
 
 // Add any global test setup here

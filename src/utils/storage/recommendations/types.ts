@@ -1,7 +1,7 @@
 
 import { Resource } from '@/types';
 
-export type RecommendationType = 'mood' | 'triggers' | 'strategy' | 'general';
+export type RecommendationType = 'mood' | 'triggers' | 'strategy' | 'general' | 'education';
 
 export interface Recommendation {
   id: string;

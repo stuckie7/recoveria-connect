@@ -6,6 +6,7 @@ import { analyzeMoodPatterns } from './moodAnalyzer';
 import { analyzeFrequentTriggers } from './triggerAnalyzer';
 import { analyzeUnusedStrategies } from './strategyAnalyzer';
 import { addGeneralRecommendations } from './generalAnalyzer';
+import { generateEducationalContent } from './educationAnalyzer';
 
 /**
  * Analyze user data and generate personalized recommendations
@@ -20,7 +21,8 @@ export const generateRecommendations = (resources: Resource[]): Recommendation[]
   recommendations = [
     ...analyzeMoodPatterns(progress.checkIns, resources),
     ...analyzeFrequentTriggers(progress.checkIns, triggers, resources),
-    ...analyzeUnusedStrategies(progress.checkIns, strategies, resources)
+    ...analyzeUnusedStrategies(progress.checkIns, strategies, resources),
+    ...generateEducationalContent(progress, resources) // Add educational content based on user journey
   ];
   
   // Add general recommendations for new users or users with limited data

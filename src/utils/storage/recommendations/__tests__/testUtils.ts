@@ -47,6 +47,24 @@ export const testResources: Resource[] = [
     url: 'https://example.com/motivation',
     tags: ['motivation', 'purpose', 'success-stories'],
     duration: '18 min'
+  },
+  {
+    id: 'r6',
+    title: 'The Science of Recovery',
+    description: 'Understanding how the brain heals in recovery',
+    type: 'article',
+    url: 'https://example.com/science',
+    tags: ['science', 'education', 'beginner'],
+    duration: '15 min'
+  },
+  {
+    id: 'r7',
+    title: 'Building Healthy Habits',
+    description: 'Creating routines that support long-term recovery',
+    type: 'video',
+    url: 'https://example.com/habits',
+    tags: ['habits', 'wellness', 'tools'],
+    duration: '22 min'
   }
 ];
 
@@ -108,6 +126,18 @@ export const createTestCheckIns = (days: number, options: {
     const sleepQualityOptions: SleepQuality[] = ['excellent', 'good', 'fair', 'poor', 'terrible'];
     const energyLevelOptions: EnergyLevel[] = ['high', 'medium', 'low', 'depleted'];
     
+    // Add notes with some mentions of common issues
+    const notesOptions = [
+      "Feeling stressed but managing",
+      "Had trouble sleeping last night",
+      "Dealing with family issues today",
+      "Feeling anxious about work",
+      "Low energy all day",
+      "Practiced meditation and felt better",
+      "Attended a support group",
+      ""
+    ];
+    
     checkIns.push({
       id: `checkin-${i}`,
       date: date.toISOString(),
@@ -115,7 +145,7 @@ export const createTestCheckIns = (days: number, options: {
       sleepQuality: sleepQualityOptions[Math.floor(Math.random() * sleepQualityOptions.length)],
       energyLevel: energyLevelOptions[Math.floor(Math.random() * energyLevelOptions.length)],
       triggers,
-      notes: `Test check-in for day ${i}`,
+      notes: notesOptions[Math.floor(Math.random() * notesOptions.length)],
       strategies,
       feelingBetter: Math.random() > 0.5
     });
