@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Lightbulb, ChevronRight, ChevronDown } from 'lucide-react';
 import { Resource } from '@/types';
@@ -17,7 +18,8 @@ const RecoveryInsights: React.FC<RecoveryInsightsProps> = ({ resources, onSelect
     mood: [],
     triggers: [],
     strategy: [],
-    general: []
+    general: [],
+    education: [] // Added missing 'education' type
   };
   
   recommendations.forEach(rec => {
@@ -84,6 +86,7 @@ const RecoveryInsights: React.FC<RecoveryInsightsProps> = ({ resources, onSelect
           {renderRecommendationGroup('triggers', 'Based on your triggers')}
           {renderRecommendationGroup('strategy', 'Suggested coping strategies')}
           {renderRecommendationGroup('general', 'General recommendations')}
+          {renderRecommendationGroup('education', 'Educational resources')}
         </div>
       )}
     </div>
