@@ -1,8 +1,10 @@
 
 import React from 'react';
-import { Book, Video, Play, FileText, BookOpen, Clock } from 'lucide-react';
+import { Book, Video, Play, FileText, BookOpen, Clock, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Resource } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface ResourceCardProps {
   resource: Resource;
@@ -14,24 +16,23 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isSelected }) => 
   const getResourceIcon = (type: Resource['type']) => {
     switch (type) {
       case 'article':
-        return <FileText size={20} className="text-blue-500" />;
+        return <FileText size={18} className="text-blue-500" />;
       case 'video':
-        return <Video size={20} className="text-red-500" />;
+        return <Video size={18} className="text-red-500" />;
       case 'audio':
-        return <Play size={20} className="text-green-500" />;
+        return <Play size={18} className="text-green-500" />;
       case 'exercise':
-        return <BookOpen size={20} className="text-purple-500" />;
+        return <BookOpen size={18} className="text-purple-500" />;
       default:
-        return <Book size={20} className="text-gray-500" />;
+        return <Book size={18} className="text-gray-500" />;
     }
   };
 
   return (
-    <a 
+    <Card 
       id={`resource-${resource.id}`}
-      href={resource.url}
       className={cn(
-        "glass-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 animate-fade-in",
+        "overflow-hidden transition-all hover:shadow-lg group border-border hover:border-primary/30 animate-fade-in h-full",
         isSelected ? "ring-2 ring-primary ring-offset-2" : ""
       )}
     >
@@ -40,16 +41,17 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isSelected }) => 
         <img 
           src={resource.imageUrl} 
           alt={resource.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute top-0 left-0 p-2">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium flex items-center">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute top-0 left-0 p-3">
+          <Badge variant="secondary" className="flex items-center gap-1.5 backdrop-blur-sm bg-white/90 text-foreground shadow-sm">
             {getResourceIcon(resource.type)}
-            <span className="ml-1.5">{resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}</span>
-          </div>
+            <span>{resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}</span>
+          </Badge>
         </div>
-        <div className="absolute bottom-0 right-0 p-2">
-          <div className="bg-black/70 backdrop-blur-sm text-white rounded-full px-3 py-1 text-xs font-medium flex items-center">
+        <div className="absolute bottom-0 right-0 p-3">
+          <div className="bg-black/60 backdrop-blur-sm text-white rounded-full px-3 py-1 text-xs font-medium flex items-center">
             <Clock size={12} className="mr-1.5" />
             {resource.duration}
           </div>
@@ -57,8 +59,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isSelected }) => 
       </div>
       
       {/* Resource content */}
-      <div className="p-4">
-        <h3 className="text-lg font-medium mb-2 line-clamp-2">
+      <CardContent className="p-5">
+        <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
           {resource.title}
         </h3>
         
@@ -67,18 +69,26 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isSelected }) => 
         </p>
         
         {/* Tags */}
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {resource.tags.map(tag => (
             <span 
               key={tag}
-              className="px-2 py-0.5 bg-muted text-xs rounded-full"
+              className="px-2 py-0.5 bg-muted text-xs rounded-full hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
             >
               #{tag}
             </span>
           ))}
         </div>
-      </div>
-    </a>
+        
+        <a 
+          href={resource.url} 
+          className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+        >
+          Learn more
+          <ExternalLink size={14} className="ml-1" />
+        </a>
+      </CardContent>
+    </Card>
   );
 };
 

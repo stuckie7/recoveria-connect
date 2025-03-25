@@ -47,7 +47,7 @@ const Navbar: React.FC = () => {
       <>
         {/* Mobile Menu Button */}
         <button 
-          className="fixed top-4 right-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-md border border-border shadow-md"
+          className="fixed top-6 right-6 z-50 p-2 rounded-full bg-background/80 backdrop-blur-xl border border-border shadow-xl"
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? "Close menu" : "Open menu"}
         >
@@ -57,8 +57,8 @@ const Navbar: React.FC = () => {
         {/* Mobile Menu */}
         <div 
           className={cn(
-            "fixed inset-0 z-40 bg-background/80 backdrop-blur-md transition-transform duration-300 ease-in-out",
-            isOpen ? "translate-x-0" : "translate-x-full"
+            "fixed inset-0 z-40 bg-background/90 backdrop-blur-xl transition-all duration-500 ease-in-out",
+            isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
         >
           <nav className="flex flex-col items-center justify-center h-full space-y-8 animate-fade-in">
@@ -67,9 +67,9 @@ const Navbar: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center justify-center space-x-3 px-6 py-4 rounded-xl transition-all duration-300 hover:bg-muted",
+                  "flex items-center justify-center space-x-3 px-6 py-4 rounded-2xl transition-all duration-300 hover:bg-accent",
                   pathname === item.path 
-                    ? "bg-primary/10 text-primary font-medium" 
+                    ? "bg-primary/10 text-primary font-medium scale-105" 
                     : "text-foreground/70"
                 )}
               >
@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
             {user && (
               <Button 
                 variant="outline" 
-                className="flex items-center space-x-2" 
+                className="flex items-center space-x-2 mt-8 shadow-md" 
                 onClick={handleSignOut}
               >
                 <LogOut size={20} />
@@ -92,21 +92,21 @@ const Navbar: React.FC = () => {
         </div>
         
         {/* Bottom Navigation Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-t border-border">
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-xl border-t border-border">
           <div className="flex justify-around items-center p-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center justify-center p-2 rounded-lg transition-all",
+                  "flex flex-col items-center justify-center p-3 rounded-xl transition-all",
                   pathname === item.path 
-                    ? "text-primary" 
+                    ? "text-primary bg-primary/5" 
                     : "text-foreground/60 hover:text-foreground/80"
                 )}
               >
-                <item.icon size={24} />
-                <span className="text-xs mt-1">{item.name}</span>
+                <item.icon size={20} />
+                <span className="text-xs mt-1 font-medium">{item.name}</span>
               </Link>
             ))}
           </div>
@@ -117,27 +117,29 @@ const Navbar: React.FC = () => {
 
   // Desktop navigation
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary mr-2"></div>
-            <span className="font-semibold text-lg">Phoenix</span>
+    <header className="fixed top-0 left-0 right-0 z-30 bg-background/70 backdrop-blur-xl border-b border-border">
+      <div className="container max-w-6xl mx-auto px-6">
+        <div className="flex justify-between items-center h-20">
+          <Link to="/" className="flex items-center group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary mr-3 flex items-center justify-center shadow-md group-hover:shadow-primary/20 transition-all duration-300">
+              <Sparkles size={20} className="text-white" />
+            </div>
+            <span className="font-bold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Phoenix</span>
           </Link>
           
-          <nav className="flex items-center space-x-1">
+          <nav className="flex items-center space-x-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200",
+                  "flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200",
                   pathname === item.path 
-                    ? "bg-primary/10 text-primary" 
+                    ? "bg-primary/10 text-primary font-medium shadow-sm" 
                     : "text-foreground/70 hover:bg-accent hover:text-foreground"
                 )}
               >
-                <item.icon size={20} />
+                <item.icon size={18} />
                 <span>{item.name}</span>
               </Link>
             ))}
@@ -146,7 +148,7 @@ const Navbar: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="ml-2 flex items-center space-x-2" 
+                className="ml-4 flex items-center space-x-2" 
                 onClick={handleSignOut}
               >
                 <LogOut size={16} />

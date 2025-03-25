@@ -91,8 +91,9 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
+    scroll-behavior: smooth;
   }
 
   /* SF Pro Display font */
@@ -135,27 +136,27 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/60 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/20 shadow-glass;
+    @apply bg-white/70 dark:bg-black/30 backdrop-blur-md rounded-2xl border border-white/30 dark:border-white/10 shadow-lg;
   }
 
   .glass-effect {
-    @apply backdrop-blur-md bg-white/60 dark:bg-black/20 border border-white/20;
+    @apply backdrop-blur-md bg-white/70 dark:bg-black/30 border border-white/30 dark:border-white/10;
   }
 
   .neo-card {
-    @apply bg-recovery-neutral-light rounded-2xl shadow-neo p-6;
+    @apply bg-recovery-neutral-light rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300;
   }
 
   .neo-button {
-    @apply bg-recovery-neutral-light hover:bg-recovery-neutral rounded-xl shadow-neo active:shadow-neo-inner transition-all duration-200;
+    @apply bg-recovery-neutral-light hover:bg-recovery-neutral rounded-xl shadow-md active:shadow-inner transition-all duration-200;
   }
 
   .neo-input {
-    @apply bg-white rounded-xl shadow-neo-inner px-4 py-3 focus:ring-2 focus:ring-primary/50 transition-all duration-200;
+    @apply bg-white rounded-xl shadow-inner px-4 py-3 focus:ring-2 focus:ring-primary/50 transition-all duration-200;
   }
 
   .hero-gradient {
-    @apply bg-gradient-to-br from-recovery-blue-light via-recovery-neutral-lightest to-recovery-green-light;
+    @apply bg-gradient-to-br from-primary/20 via-background to-secondary/20;
   }
 
   .text-gradient {
@@ -163,7 +164,7 @@
   }
 
   .page-container {
-    @apply container max-w-5xl px-4 sm:px-6 animate-fade-in;
+    @apply container max-w-5xl px-4 sm:px-6 animate-fade-in pt-24 pb-20;
   }
 
   .timeline-connector {
@@ -173,12 +174,28 @@
   .milestone-dot {
     @apply absolute top-1 left-0 w-5 h-5 rounded-full bg-primary shadow-lg z-10;
   }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .btn-glow {
+    @apply relative overflow-hidden;
+  }
+  
+  .btn-glow::after {
+    @apply content-[''] absolute inset-0 z-[-1] opacity-0 transition-opacity duration-500 bg-gradient-to-r from-primary/60 to-secondary/60 blur-xl;
+  }
+  
+  .btn-glow:hover::after {
+    @apply opacity-100;
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -192,4 +209,30 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Modern animation utilities */
+@layer utilities {
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/20;
+  }
+  
+  .animated-bg {
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+  
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 }
