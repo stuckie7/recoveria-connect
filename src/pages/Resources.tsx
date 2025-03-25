@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Book, Video, Play, FileText, Search, Filter, Clock, BookOpen, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Resource } from '@/types';
+import RecoveryInsights from '@/components/resources/RecoveryInsights';
 
 // Sample resources data
 const SAMPLE_RESOURCES: Resource[] = [
@@ -75,6 +76,7 @@ const Resources: React.FC = () => {
   const [selectedType, setSelectedType] = useState<ResourceType>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   
   // Get all unique tags
   const allTags = Array.from(
@@ -130,6 +132,20 @@ const Resources: React.FC = () => {
         return <Book size={20} className="text-gray-500" />;
     }
   };
+
+  const handleResourceSelect = (resource: Resource) => {
+    setSelectedResource(resource);
+    // Scroll to the resource card
+    const resourceElement = document.getElementById(`resource-${resource.id}`);
+    if (resourceElement) {
+      resourceElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Add a highlight effect
+      resourceElement.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+      setTimeout(() => {
+        resourceElement.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+      }, 2000);
+    }
+  };
   
   return (
     <div className="py-20 px-4 min-h-screen">
@@ -140,6 +156,12 @@ const Resources: React.FC = () => {
         <p className="text-muted-foreground mb-6 text-center lg:text-left">
           Educational materials to support your recovery journey
         </p>
+        
+        {/* Recovery Insights */}
+        <RecoveryInsights 
+          resources={SAMPLE_RESOURCES} 
+          onSelectResource={handleResourceSelect} 
+        />
         
         {/* Search and filters */}
         <div className="glass-card mb-6">
@@ -276,9 +298,13 @@ const Resources: React.FC = () => {
           {filteredResources.length > 0 ? (
             filteredResources.map((resource) => (
               <a 
-                key={resource.id} 
+                key={resource.id}
+                id={`resource-${resource.id}`}
                 href={resource.url}
-                className="glass-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 animate-fade-in"
+                className={cn(
+                  "glass-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 animate-fade-in",
+                  selectedResource?.id === resource.id ? "ring-2 ring-primary ring-offset-2" : ""
+                )}
               >
                 {/* Resource image */}
                 <div className="h-48 relative overflow-hidden">
