@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { getUserProgress, setSobrietyStartDate } from '@/utils/storage';
 
@@ -7,6 +7,12 @@ export function useSobrietyDate() {
   const [progress, setProgress] = useState(getUserProgress());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(progress.startDate));
+  
+  // Update progress when it changes
+  useEffect(() => {
+    const updatedProgress = getUserProgress();
+    setProgress(updatedProgress);
+  }, []);
   
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const date = new Date(event.target.value);
@@ -34,7 +40,6 @@ export function useSobrietyDate() {
 
   return {
     progress,
-    setProgress,
     isDatePickerOpen,
     setIsDatePickerOpen,
     selectedDate,

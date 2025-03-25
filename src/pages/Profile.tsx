@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { toast } from 'sonner';
 import { resetAppData } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,8 @@ import { useSobrietyDate } from '@/hooks/useSobrietyDate';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import DatePicker from '@/components/profile/DatePicker';
 import StatsCards from '@/components/profile/StatsCards';
+import ProgressChart from '@/components/profile/ProgressChart';
+import StreakChart from '@/components/profile/StreakChart';
 import SettingsList from '@/components/profile/SettingsList';
 import AboutSection from '@/components/profile/AboutSection';
 import DangerZone from '@/components/profile/DangerZone';
@@ -17,7 +19,6 @@ const Profile: React.FC = () => {
   const { user } = useAuth();
   const { 
     progress, 
-    setProgress,
     isDatePickerOpen, 
     setIsDatePickerOpen,
     selectedDate,
@@ -25,14 +26,9 @@ const Profile: React.FC = () => {
     handleSaveDate
   } = useSobrietyDate();
   
-  useEffect(() => {
-    // The initial progress is already set in the hook
-  }, []);
-  
   const handleResetApp = () => {
     if (window.confirm('Are you sure you want to reset all app data? This cannot be undone.')) {
-      resetAppData();
-      setProgress(resetAppData());
+      const resetData = resetAppData();
       
       toast.success('App data reset', {
         description: 'All your data has been reset to default values.'
@@ -67,6 +63,16 @@ const Profile: React.FC = () => {
         )}
         
         <StatsCards progress={progress} />
+        
+        {/* Data visualization section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Your Progress Visualization</h2>
+          <div className="grid grid-cols-1 gap-6">
+            <ProgressChart days={30} />
+            <StreakChart />
+          </div>
+        </div>
+        
         <SettingsList />
         <AboutSection />
         <DangerZone onResetApp={handleResetApp} />
