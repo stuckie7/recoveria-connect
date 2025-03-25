@@ -78,7 +78,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
         title: "Success!",
         description: type === "question" 
           ? "Your question has been published to the community."
-          : "Your post has been published.",
+          : type === "achievement"
+          ? "Your achievement has been shared with the community."
+          : "Your story has been published.",
       });
 
       resetForm();
@@ -100,7 +102,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {type === 'question' ? 'Ask a Question' : 'Create a New Post'}
+            {type === 'question' 
+              ? 'Ask a Question' 
+              : type === 'achievement'
+              ? 'Share an Achievement'
+              : 'Share Your Story'}
           </DialogTitle>
         </DialogHeader>
         
@@ -129,7 +135,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Publishing...' : (type === 'question' ? 'Ask Question' : 'Publish Post')}
+              {isSubmitting 
+                ? 'Publishing...' 
+                : (type === 'question' 
+                  ? 'Ask Question' 
+                  : type === 'achievement' 
+                  ? 'Share Achievement' 
+                  : 'Publish Story')}
             </Button>
           </DialogFooter>
         </form>

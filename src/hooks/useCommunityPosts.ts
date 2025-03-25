@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CommunityPost } from '@/types';
@@ -87,7 +86,7 @@ export const useCommunityPosts = () => {
           if (filterBy === 'all') return true;
           if (filterBy === 'questions' && post.type === 'question') return true;
           if (filterBy === 'stories' && post.type === 'story') return true;
-          if (filterBy === 'resources' && post.type === 'resource') return true;
+          if (filterBy === 'achievements' && post.type === 'achievement') return true;
           return false;
         })
         .sort((a, b) => {

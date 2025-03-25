@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
-export type PostType = 'story' | 'question' | 'resource';
+export type PostType = 'story' | 'achievement' | 'question';
 
 interface PostTypeSelectorProps {
   type: PostType;
@@ -24,19 +25,19 @@ const PostTypeSelector: React.FC<PostTypeSelectorProps> = ({ type, setType }) =>
         </Button>
         <Button 
           type="button" 
+          variant={type === 'achievement' ? 'default' : 'outline'} 
+          onClick={() => setType('achievement')}
+          size="sm"
+        >
+          Achievement
+        </Button>
+        <Button 
+          type="button" 
           variant={type === 'question' ? 'default' : 'outline'} 
           onClick={() => setType('question')}
           size="sm"
         >
           Question
-        </Button>
-        <Button 
-          type="button" 
-          variant={type === 'resource' ? 'default' : 'outline'} 
-          onClick={() => setType('resource')}
-          size="sm"
-        >
-          Resource
         </Button>
       </div>
     </div>
