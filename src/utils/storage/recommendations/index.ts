@@ -3,8 +3,5 @@
 export { generateRecommendations } from './generator';
 
 // Export types
-export { 
-  RecommendationType,
-  Recommendation,
-  getResourcesByIds
-} from './types';
+export { getResourcesByIds } from './types';
+export type { RecommendationType, Recommendation } from './types';
