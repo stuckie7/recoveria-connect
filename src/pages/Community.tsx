@@ -56,15 +56,23 @@ const Community: React.FC = () => {
         if (!userError && userData) {
           return { 
             ...post, 
+            title: post.title || 'Untitled Post', // Ensure title exists
             username: userData.username || 'Anonymous User',
-            avatar_url: userData.avatar_url || `https://i.pravatar.cc/150?u=${post.user_id}` 
+            avatar_url: userData.avatar_url || `https://i.pravatar.cc/150?u=${post.user_id}`,
+            likes: post.likes || 0,
+            comments: post.comments || 0,
+            tags: post.tags || []
           };
         }
         
         return { 
           ...post, 
+          title: post.title || 'Untitled Post', // Ensure title exists 
           username: 'Anonymous User',
-          avatar_url: `https://i.pravatar.cc/150?u=${post.user_id}` 
+          avatar_url: `https://i.pravatar.cc/150?u=${post.user_id}`,
+          likes: post.likes || 0,
+          comments: post.comments || 0,
+          tags: post.tags || []
         };
       })
     );
