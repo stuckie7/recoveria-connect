@@ -10,7 +10,7 @@ const samplePosts = [
     id: '1',
     title: '30 Days Sober!',
     username: 'Hopeful123',
-    content: 'I never thought I'd make it this far, but here I am. 30 days sober and feeling stronger than ever.',
+    content: "I never thought I'd make it this far, but here I am. 30 days sober and feeling stronger than ever.",
     likes: 24,
     comments: 7,
     time: '2h ago'

@@ -36,7 +36,7 @@ const DEFAULT_STRATEGIES: CopingStrategy[] = [
     id: '2',
     name: 'Call a support person',
     description: 'Reach out to someone in your support network',
-    steps: ['Identify who to call', 'Explain how you're feeling', 'Ask for their support or just listen'],
+    steps: ['Identify who to call', "Explain how you're feeling", 'Ask for their support or just listen'],
     forTriggers: ['2', '3', '4', '8'],
   },
   {
