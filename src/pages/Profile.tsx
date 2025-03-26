@@ -18,6 +18,7 @@ import AboutSection from '@/components/profile/AboutSection';
 import DangerZone from '@/components/profile/DangerZone';
 import SubscriptionPlans from '@/components/subscription/SubscriptionPlans';
 import CurrentSubscription from '@/components/subscription/CurrentSubscription';
+import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
@@ -110,6 +111,9 @@ const Profile: React.FC = () => {
                 setIsOpen={setIsDatePickerOpen}
               />
             )}
+            
+            {/* Add the PersonalInfoForm component */}
+            <PersonalInfoForm />
             
             <StatsCards progress={progress} />
             
