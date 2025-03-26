@@ -1,4 +1,3 @@
-
 import { Stripe } from "https://esm.sh/stripe@12.4.0";
 import { getSupabaseAdmin, corsHeaders } from "./utils.ts";
 
