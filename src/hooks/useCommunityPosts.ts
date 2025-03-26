@@ -38,6 +38,7 @@ export const useCommunityPosts = () => {
             ...post, 
             title: post.title || 'Untitled Post', // Ensure title exists
             username: userData.username || 'Anonymous User',
+            // Always use the actual avatar URL from the profile, or a fallback
             avatar_url: userData.avatar_url || `https://i.pravatar.cc/150?u=${post.user_id}`,
             likes: post.likes || 0,
             comments: post.comments || 0,

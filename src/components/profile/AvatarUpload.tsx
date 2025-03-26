@@ -60,6 +60,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
+      // Store avatars in user-specific folders using their user ID
       const filePath = `${user!.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       // Check file size (limit to 2MB)

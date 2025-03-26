@@ -37,6 +37,11 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({ post, onLike }) =
                 src={post.avatar_url} 
                 alt={post.username || 'User'} 
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if the image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.src = `https://ui-avatars.com/api/?name=${post.username?.charAt(0) || 'A'}&background=random`;
+                }}
               />
             </div>
             <div>

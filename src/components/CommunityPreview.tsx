@@ -3,6 +3,7 @@ import React from 'react';
 import { MessageSquare, Heart, Users, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Sample community posts for preview
 const samplePosts = [
@@ -10,6 +11,7 @@ const samplePosts = [
     id: '1',
     title: '30 Days Sober!',
     username: 'Hopeful123',
+    avatar: 'https://i.pravatar.cc/150?u=1',
     content: "I never thought I'd make it this far, but here I am. 30 days sober and feeling stronger than ever.",
     likes: 24,
     comments: 7,
@@ -19,6 +21,7 @@ const samplePosts = [
     id: '2',
     title: 'Struggling with social events',
     username: 'JourneyToRecovery',
+    avatar: 'https://i.pravatar.cc/150?u=2',
     content: 'How do you handle social gatherings where everyone is drinking? I have a wedding coming up and feeling anxious.',
     likes: 18,
     comments: 12,
@@ -54,12 +57,18 @@ const CommunityPreview: React.FC = () => {
           >
             <div className="p-4">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium">{post.title}</h4>
-                <span className="text-xs text-muted-foreground">{post.time}</span>
-              </div>
-              
-              <div className="text-sm text-muted-foreground mb-2">
-                Posted by <span className="text-foreground">{post.username}</span>
+                <div className="flex items-center">
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarImage src={post.avatar} alt={post.username} />
+                    <AvatarFallback>{post.username[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h4 className="font-medium">{post.title}</h4>
+                    <div className="text-xs text-muted-foreground">
+                      by <span className="text-foreground">{post.username}</span> · {post.time}
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <p className="text-sm mb-3 line-clamp-2">{post.content}</p>
