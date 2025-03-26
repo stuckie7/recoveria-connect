@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { getUserProgress } from '@/utils/storage';
 
 const navItems = [
   { name: 'Dashboard', path: '/', icon: Home },
@@ -20,6 +21,21 @@ const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  // Check if user has completed onboarding
+  useEffect(() => {
+    if (user) {
+      try {
+        const progress = getUserProgress();
+        // If we have a start date set, user has completed onboarding
+        setHasCompletedOnboarding(!!progress.startDate);
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        setHasCompletedOnboarding(false);
+      }
+    }
+  }, [user, pathname]);
 
   // Close mobile menu when navigating
   useEffect(() => {
@@ -41,6 +57,16 @@ const Navbar: React.FC = () => {
   if (!user && pathname !== '/welcome') {
     return null;
   }
+
+  // Do not show welcome link if user has completed onboarding
+  const welcomeLink = (!hasCompletedOnboarding && user) ? (
+    <Link
+      to="/welcome"
+      className="text-primary/90 hover:text-primary font-medium"
+    >
+      Complete Onboarding
+    </Link>
+  ) : null;
 
   if (isMobile) {
     return (
@@ -77,6 +103,8 @@ const Navbar: React.FC = () => {
                 <span className="text-lg">{item.name}</span>
               </Link>
             ))}
+            
+            {welcomeLink}
             
             {user && (
               <Button 
@@ -143,6 +171,8 @@ const Navbar: React.FC = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
+            
+            {welcomeLink}
             
             {user && (
               <Button 
