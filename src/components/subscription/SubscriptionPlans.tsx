@@ -16,12 +16,17 @@ const SubscriptionPlans: React.FC = () => {
       return;
     }
     
-    // Make sure we're passing the actual Stripe price ID
-    console.log("Subscribing with price ID:", priceId);
-    const checkoutUrl = await subscribe(priceId);
-    
-    if (!checkoutUrl) {
-      toast.error('Failed to start subscription process');
+    try {
+      // Make sure we're passing the actual Stripe price ID
+      console.log("Subscribing with price ID:", priceId);
+      const checkoutUrl = await subscribe(priceId);
+      
+      if (!checkoutUrl) {
+        toast.error('Failed to start subscription process');
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast.error('Error starting subscription process');
     }
   };
 
@@ -70,7 +75,8 @@ const SubscriptionPlans: React.FC = () => {
         'Premium resources',
         'Priority support'
       ],
-      stripe_price_id: 'price_1R6NsyE99jBtZ4QEdVq5iGuA'
+      // Use a valid Stripe test mode price ID format
+      stripe_price_id: 'price_1234567890'
     }
   ];
 

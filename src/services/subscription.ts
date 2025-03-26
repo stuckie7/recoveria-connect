@@ -119,7 +119,7 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
     console.log("Creating checkout with price ID:", priceId);
     
     // Call the Stripe webhook function
-    const { data: response, error } = await supabase.functions.invoke('stripe-webhook', {
+    const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         priceId,
         returnUrl,
@@ -133,7 +133,13 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       return null;
     }
     
-    return response.url;
+    if (!data || !data.url) {
+      console.error('Invalid response from checkout session:', data);
+      toast.error('Invalid response from subscription service');
+      return null;
+    }
+    
+    return data.url;
   } catch (error) {
     console.error('Error creating checkout session:', error);
     toast.error('Failed to create checkout session');
@@ -161,8 +167,7 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
       return null;
     }
     
-    // Fix the function invoke options - remove 'path' property
-    const { data: response, error } = await supabase.functions.invoke('stripe-webhook', {
+    const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         customerId: customerData.stripe_customer_id,
         returnUrl,
@@ -176,7 +181,13 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
       return null;
     }
     
-    return response.url;
+    if (!data || !data.url) {
+      console.error('Invalid response from portal session:', data);
+      toast.error('Invalid response from subscription service');
+      return null;
+    }
+    
+    return data.url;
   } catch (error) {
     console.error('Error creating portal session:', error);
     toast.error('Failed to create portal session');

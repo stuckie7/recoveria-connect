@@ -8,6 +8,7 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
     const { priceId, returnUrl } = data;
     
     if (!priceId) {
+      console.error("Missing price ID in request");
       return new Response(
         JSON.stringify({ error: "Price ID is required" }),
         {
@@ -17,10 +18,9 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
       );
     }
 
-    // Use the provided price ID directly instead of trying to remap it
-    // This will accept both IDs from the database and directly passed IDs
     console.log(`Creating checkout session with price ID: ${priceId}`);
     
+    // Create the session with the provided price ID
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -34,7 +34,7 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
       customer_creation: "always",
     });
 
-    console.log("Checkout session created:", session.url);
+    console.log("Checkout session created successfully:", session.id);
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -42,9 +42,14 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
       }
     );
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    console.error("Error creating checkout session:", error.message);
+    console.error("Error details:", JSON.stringify(error));
     return new Response(
-      JSON.stringify({ error: "Failed to create checkout session", details: error.message }),
+      JSON.stringify({ 
+        error: "Failed to create checkout session", 
+        details: error.message,
+        code: error.type || error.code
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -59,6 +64,7 @@ export async function createPortalSession(data: any, stripe: Stripe) {
     const { customerId, returnUrl } = data;
     
     if (!customerId) {
+      console.error("Missing customer ID in request");
       return new Response(
         JSON.stringify({ error: "Customer ID is required" }),
         {
@@ -68,11 +74,13 @@ export async function createPortalSession(data: any, stripe: Stripe) {
       );
     }
 
+    console.log(`Creating portal session for customer: ${customerId}`);
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     });
 
+    console.log("Portal session created successfully:", session.id);
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -80,9 +88,14 @@ export async function createPortalSession(data: any, stripe: Stripe) {
       }
     );
   } catch (error) {
-    console.error("Error creating portal session:", error);
+    console.error("Error creating portal session:", error.message);
+    console.error("Error details:", JSON.stringify(error));
     return new Response(
-      JSON.stringify({ error: "Failed to create portal session" }),
+      JSON.stringify({ 
+        error: "Failed to create portal session",
+        details: error.message,
+        code: error.type || error.code
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
