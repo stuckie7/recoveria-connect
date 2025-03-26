@@ -8,6 +8,7 @@ import DailyCheckIn from '@/components/DailyCheckIn';
 import CommunityPreview from '@/components/CommunityPreview';
 import EmergencySupport from '@/components/EmergencySupport';
 import MilestoneCard from '@/components/MilestoneCard';
+import { UpcomingMilestones } from '@/components/profile/personal-info';
 
 const Dashboard: React.FC = () => {
   useEffect(() => {
@@ -53,28 +54,8 @@ const Dashboard: React.FC = () => {
             {/* Mood tracker */}
             <MoodTracker />
             
-            {/* Upcoming milestones */}
-            <div className="neo-card">
-              <h3 className="text-lg font-medium mb-6">Upcoming Milestones</h3>
-              
-              {upcomingMilestones.length > 0 ? (
-                <div className="space-y-2">
-                  {upcomingMilestones.map((milestone, index) => (
-                    <MilestoneCard
-                      key={milestone.id}
-                      milestone={milestone}
-                      index={index}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center p-4 bg-muted rounded-xl">
-                  <p className="text-muted-foreground">
-                    You've reached all your milestones! Amazing work!
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Upcoming milestones - New Component */}
+            <UpcomingMilestones />
             
             {/* Community preview */}
             <CommunityPreview />
