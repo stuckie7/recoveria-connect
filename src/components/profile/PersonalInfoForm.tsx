@@ -49,6 +49,12 @@ const PersonalInfoForm: React.FC = () => {
     occupation: '',
   });
 
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: profileData,
+    mode: 'onChange',
+  });
+
   React.useEffect(() => {
     if (user) {
       fetchProfileData();
@@ -59,10 +65,10 @@ const PersonalInfoForm: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Fixed error handling to properly check for errors and handle data
+      // Select only columns that we know exist in all scenarios
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, username, bio, location, occupation')
+        .select('full_name, username')
         .eq('id', user!.id)
         .single();
 
@@ -72,18 +78,39 @@ const PersonalInfoForm: React.FC = () => {
         return;
       }
 
-      if (data) {
-        const profileValues = {
-          full_name: data.full_name || '',
-          username: data.username || '',
-          bio: data.bio || '',
-          location: data.location || '',
-          occupation: data.occupation || '',
-        };
+      // Set the data we know exists
+      const profileValues: ProfileFormValues = {
+        full_name: data?.full_name || '',
+        username: data?.username || '',
+        bio: '',
+        location: '',
+        occupation: '',
+      };
+      
+      // Now try to fetch the new columns
+      try {
+        const { data: extendedData, error: extendedError } = await supabase
+          .from('profiles')
+          .select('bio, location, occupation')
+          .eq('id', user!.id)
+          .single();
         
-        setProfileData(profileValues);
-        form.reset(profileValues);
+        if (!extendedError && extendedData) {
+          // If successful, add these fields to our profile values
+          profileValues.bio = extendedData.bio || '';
+          profileValues.location = extendedData.location || '';
+          profileValues.occupation = extendedData.occupation || '';
+        } else {
+          console.log('New columns may not exist yet:', extendedError);
+          // The columns might not exist yet, which is fine
+        }
+      } catch (e) {
+        console.log('Could not fetch extended profile fields:', e);
+        // Ignore errors from this query as the columns might not exist yet
       }
+      
+      setProfileData(profileValues);
+      form.reset(profileValues);
     } catch (error) {
       console.error('Error fetching profile data:', error);
       toast.error('Failed to load profile data');
@@ -92,26 +119,25 @@ const PersonalInfoForm: React.FC = () => {
     }
   };
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: profileData,
-    mode: 'onChange',
-  });
-
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       setIsLoading(true);
       
+      // Create an update object with only the fields we want to update
+      const updateData: any = {
+        full_name: data.full_name,
+        username: data.username,
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Only include the new fields if they are defined in the form data
+      if (data.bio !== undefined) updateData.bio = data.bio;
+      if (data.location !== undefined) updateData.location = data.location;
+      if (data.occupation !== undefined) updateData.occupation = data.occupation;
+      
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: data.full_name,
-          username: data.username,
-          bio: data.bio,
-          location: data.location,
-          occupation: data.occupation,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', user!.id);
 
       if (error) {
