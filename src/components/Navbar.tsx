@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Users, Bookmark, User, Menu, X, LogOut, Sparkles } from 'lucide-react';
+import { Home, Users, Bookmark, User, Menu, X, LogOut, Sparkles, Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +9,7 @@ import { getUserProgress } from '@/utils/storage';
 
 const navItems = [
   { name: 'Dashboard', path: '/', icon: Home },
+  { name: 'Journal', path: '/journal', icon: Book },
   { name: 'Community', path: '/community', icon: Users },
   { name: 'Resources', path: '/resources', icon: Bookmark },
   { name: 'Profile', path: '/profile', icon: User },
@@ -23,12 +23,10 @@ const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // Check if user has completed onboarding
   useEffect(() => {
     if (user) {
       try {
         const progress = getUserProgress();
-        // If we have a start date set, user has completed onboarding
         setHasCompletedOnboarding(!!progress.startDate);
       } catch (error) {
         console.error('Error checking onboarding status:', error);
@@ -37,12 +35,10 @@ const Navbar: React.FC = () => {
     }
   }, [user, pathname]);
 
-  // Close mobile menu when navigating
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
-  // Update the document title based on the current route
   useEffect(() => {
     const currentPage = navItems.find(item => item.path === pathname)?.name || 'Not Found';
     document.title = `Phoenix | ${currentPage}`;
@@ -53,12 +49,10 @@ const Navbar: React.FC = () => {
     navigate('/auth');
   };
 
-  // If there's no user, don't render the navbar
   if (!user && pathname !== '/welcome') {
     return null;
   }
 
-  // Do not show welcome link if user has completed onboarding
   const welcomeLink = (!hasCompletedOnboarding && user) ? (
     <Link
       to="/welcome"
@@ -71,7 +65,6 @@ const Navbar: React.FC = () => {
   if (isMobile) {
     return (
       <>
-        {/* Mobile Menu Button */}
         <button 
           className="fixed top-6 right-6 z-50 p-2 rounded-full bg-background/80 backdrop-blur-xl border border-border shadow-xl"
           onClick={() => setIsOpen(!isOpen)}
@@ -80,7 +73,6 @@ const Navbar: React.FC = () => {
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
         
-        {/* Mobile Menu */}
         <div 
           className={cn(
             "fixed inset-0 z-40 bg-background/90 backdrop-blur-xl transition-all duration-500 ease-in-out",
@@ -119,7 +111,6 @@ const Navbar: React.FC = () => {
           </nav>
         </div>
         
-        {/* Bottom Navigation Bar */}
         <div className="fixed bottom-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-xl border-t border-border">
           <div className="flex justify-around items-center p-2">
             {navItems.map((item) => (
@@ -143,7 +134,6 @@ const Navbar: React.FC = () => {
     );
   }
 
-  // Desktop navigation
   return (
     <header className="fixed top-0 left-0 right-0 z-30 bg-background/70 backdrop-blur-xl border-b border-border">
       <div className="container max-w-6xl mx-auto px-6">

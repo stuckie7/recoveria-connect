@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Community from "./pages/Community";
 import Resources from "./pages/Resources";
 import Profile from "./pages/Profile";
+import Journal from "./pages/Journal";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/community" element={<Community />} />
                 <Route path="/resources" element={<Resources />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/journal" element={<Journal />} />
               </Route>
               
               <Route path="*" element={<Navigate to="/404" replace />} />
