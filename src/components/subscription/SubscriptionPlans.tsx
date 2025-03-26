@@ -16,10 +16,10 @@ const SubscriptionPlans: React.FC = () => {
       return;
     }
     
-    // For premium plan, always use the hardcoded price ID
-    const finalPriceId = priceId === "price_premium" ? "price_1R6NsyE99jBtZ4QEdVq5iGuA" : priceId;
+    // Make sure we're passing the actual Stripe price ID
+    console.log("Subscribing with price ID:", priceId);
+    const checkoutUrl = await subscribe(priceId);
     
-    const checkoutUrl = await subscribe(finalPriceId);
     if (!checkoutUrl) {
       toast.error('Failed to start subscription process');
     }

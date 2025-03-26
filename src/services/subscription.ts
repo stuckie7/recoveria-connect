@@ -115,7 +115,10 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       return null;
     }
     
-    // Fix the function invoke options - remove 'path' property
+    // Log the price ID we're sending to the function
+    console.log("Creating checkout with price ID:", priceId);
+    
+    // Call the Stripe webhook function
     const { data: response, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         priceId,

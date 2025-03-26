@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Stripe } from "https://esm.sh/stripe@12.4.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
@@ -36,6 +35,9 @@ serve(async (req) => {
   const url = new URL(req.url);
   const requestBody = await req.json().catch(() => ({}));
   
+  console.log("Request path:", url.pathname);
+  console.log("Request body:", JSON.stringify(requestBody));
+  
   try {
     // Route handling based on URL path and POST body contents
     if (url.pathname.endsWith("/webhook") && req.headers.get("stripe-signature")) {
@@ -50,6 +52,7 @@ serve(async (req) => {
     }
 
     // If no route matched
+    console.error("No route matched:", url.pathname, JSON.stringify(requestBody));
     return new Response(
       JSON.stringify({ error: "Not found" }),
       {
@@ -244,15 +247,14 @@ async function createCheckoutSession(data: any, stripe: Stripe) {
       );
     }
 
-    // Use the provided price ID or default to the one saved in config
-    const finalPriceId = priceId === "price_premium" ? "price_1R6NsyE99jBtZ4QEdVq5iGuA" : priceId;
-
-    console.log(`Creating checkout session with price ID: ${finalPriceId}`);
+    // Use the provided price ID directly instead of trying to remap it
+    // This will accept both IDs from the database and directly passed IDs
+    console.log(`Creating checkout session with price ID: ${priceId}`);
     
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
-          price: finalPriceId,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -262,6 +264,7 @@ async function createCheckoutSession(data: any, stripe: Stripe) {
       customer_creation: "always",
     });
 
+    console.log("Checkout session created:", session.url);
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -271,7 +274,7 @@ async function createCheckoutSession(data: any, stripe: Stripe) {
   } catch (error) {
     console.error("Error creating checkout session:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to create checkout session" }),
+      JSON.stringify({ error: "Failed to create checkout session", details: error.message }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
