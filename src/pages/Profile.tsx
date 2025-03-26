@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +17,7 @@ import AboutSection from '@/components/profile/AboutSection';
 import DangerZone from '@/components/profile/DangerZone';
 import SubscriptionPlans from '@/components/subscription/SubscriptionPlans';
 import CurrentSubscription from '@/components/subscription/CurrentSubscription';
-import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
+import PersonalInfoForm from '@/components/profile/personal-info';
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
