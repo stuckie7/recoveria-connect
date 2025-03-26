@@ -12,7 +12,7 @@ const SAMPLE_RESOURCES: Resource[] = [
     title: 'Understanding Addiction: The Science Behind Recovery',
     description: 'Learn about the neuroscience of addiction and how understanding your brain can help your recovery journey.',
     type: 'article',
-    url: '#',
+    url: 'https://www.verywellmind.com/the-science-of-addiction-22424',
     imageUrl: 'https://images.unsplash.com/photo-1579165466741-7f35e4755169?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     tags: ['science', 'education', 'beginner'],
     duration: '10 min read'
@@ -22,7 +22,7 @@ const SAMPLE_RESOURCES: Resource[] = [
     title: 'Guided Meditation for Cravings',
     description: 'A calming meditation practice specifically designed to help you through moments of intense cravings.',
     type: 'audio',
-    url: '#',
+    url: 'https://www.youtube.com/watch?v=4EaMJOo1jks',
     imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     tags: ['meditation', 'coping', 'audio'],
     duration: '15 min listen'
@@ -32,7 +32,7 @@ const SAMPLE_RESOURCES: Resource[] = [
     title: 'Rebuilding Relationships in Recovery',
     description: 'Practical advice on how to repair and strengthen relationships that may have been damaged during addiction.',
     type: 'video',
-    url: '#',
+    url: 'https://www.youtube.com/watch?v=RpzJ-lSMuxo',
     imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     tags: ['relationships', 'healing', 'video'],
     duration: '22 min watch'
@@ -42,7 +42,7 @@ const SAMPLE_RESOURCES: Resource[] = [
     title: 'CBT Skills Workbook',
     description: 'Interactive exercises to develop cognitive behavioral therapy skills for managing triggers and negative thoughts.',
     type: 'exercise',
-    url: '#',
+    url: 'https://www.therapistaid.com/therapy-worksheets/cbt/none',
     imageUrl: 'https://images.unsplash.com/photo-1517842645767-c639042777db?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     tags: ['cbt', 'exercise', 'tools'],
     duration: '45 min activity'
@@ -52,7 +52,7 @@ const SAMPLE_RESOURCES: Resource[] = [
     title: 'Nutrition for Recovery: Healing Your Body',
     description: 'How proper nutrition can support physical healing and stabilize mood during recovery.',
     type: 'article',
-    url: '#',
+    url: 'https://www.healthline.com/nutrition/nutrition-and-addiction-recovery',
     imageUrl: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     tags: ['nutrition', 'health', 'self-care'],
     duration: '12 min read'
@@ -62,7 +62,7 @@ const SAMPLE_RESOURCES: Resource[] = [
     title: 'Finding Purpose After Addiction',
     description: 'Stories and strategies for discovering new meaning and purpose in your life after addiction.',
     type: 'video',
-    url: '#',
+    url: 'https://www.youtube.com/watch?v=UUnRKf2CemA',
     imageUrl: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     tags: ['purpose', 'motivation', 'success-stories'],
     duration: '18 min watch'

@@ -28,13 +28,19 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isSelected }) => 
     }
   };
 
+  const handleResourceClick = () => {
+    // Open the resource URL in a new tab
+    window.open(resource.url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <Card 
       id={`resource-${resource.id}`}
       className={cn(
-        "overflow-hidden transition-all hover:shadow-lg group border-border hover:border-primary/30 animate-fade-in h-full",
+        "overflow-hidden transition-all hover:shadow-lg group border-border hover:border-primary/30 animate-fade-in h-full cursor-pointer",
         isSelected ? "ring-2 ring-primary ring-offset-2" : ""
       )}
+      onClick={handleResourceClick}
     >
       {/* Resource image */}
       <div className="h-48 relative overflow-hidden">
@@ -74,19 +80,20 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, isSelected }) => 
             <span 
               key={tag}
               className="px-2 py-0.5 bg-muted text-xs rounded-full hover:bg-primary/10 hover:text-primary cursor-pointer transition-colors"
+              onClick={(e) => {
+                // Prevent the card click from triggering
+                e.stopPropagation();
+              }}
             >
               #{tag}
             </span>
           ))}
         </div>
         
-        <a 
-          href={resource.url} 
-          className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-        >
+        <div className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors font-medium">
           Learn more
           <ExternalLink size={14} className="ml-1" />
-        </a>
+        </div>
       </CardContent>
     </Card>
   );
