@@ -32,7 +32,7 @@ const SobrietyCounter: React.FC = () => {
   const updateCounters = (start: Date) => {
     const now = new Date();
     
-    // Calculate days
+    // Calculate days - make sure we're using our corrected daysBetween function
     const totalDays = daysBetween(start, now);
     setDays(totalDays);
     
@@ -66,7 +66,7 @@ const SobrietyCounter: React.FC = () => {
     const paddedValue = value.toString().padStart(padLength, '0');
     return paddedValue.split('').map((digit, index) => (
       <span 
-        key={index} 
+        key={`digit-${index}-${value}`}
         className="inline-block w-12 h-16 md:w-16 md:h-20 bg-white dark:bg-card rounded-lg shadow-neo flex items-center justify-center mx-0.5 overflow-hidden relative"
       >
         <span className="text-2xl md:text-4xl font-semibold animate-scale-in">

@@ -34,7 +34,7 @@ const UpcomingMilestones: React.FC = () => {
           <div className="space-y-4">
             {upcomingMilestones.map((milestone, index) => (
               <div 
-                key={milestone.days} 
+                key={`milestone-${milestone.days}-${index}`} 
                 className={cn(
                   "flex items-center p-3 rounded-lg border border-border",
                   "bg-card/50 hover:bg-card/80 transition-colors",

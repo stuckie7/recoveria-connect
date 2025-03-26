@@ -7,14 +7,16 @@
  * Calculate the number of days between two dates
  */
 export const daysBetween = (start: Date | string, end: Date = new Date()): number => {
-  const startDate = typeof start === 'string' ? new Date(start) : start;
-  const endDate = end;
+  const startDate = typeof start === 'string' ? new Date(start) : new Date(start);
+  const endDate = new Date(end);
   
   // Reset hours to ensure accurate day calculation
   startDate.setHours(0, 0, 0, 0);
   endDate.setHours(0, 0, 0, 0);
   
+  // Calculate the time difference in milliseconds
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  // Convert milliseconds to days
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
   return diffDays;
@@ -85,7 +87,7 @@ export const getNextMilestoneDate = (startDate: Date | string, currentDays: numb
  * Get upcoming milestones based on current progress
  */
 export const getUpcomingMilestones = (startDate: Date | string, currentDays: number, count = 3): { days: number, date: Date }[] => {
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const start = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
   
   // Common milestones in days
   const milestones = [1, 7, 30, 60, 90, 180, 365, 730, 1095]; // 1d, 1w, 1m, 2m, 3m, 6m, 1y, 2y, 3y
