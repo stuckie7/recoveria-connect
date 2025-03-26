@@ -31,7 +31,7 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
       mode: "subscription",
       success_url: `${returnUrl}?success=true`,
       cancel_url: `${returnUrl}?canceled=true`,
-      customer_creation: "always",
+      // Remove customer_creation for subscription mode which was causing errors
     });
 
     console.log("Checkout session created successfully:", session.id);
