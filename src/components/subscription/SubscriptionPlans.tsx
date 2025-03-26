@@ -50,36 +50,6 @@ const SubscriptionPlans: React.FC = () => {
     );
   }
 
-  // If no plans are loaded, create default plans
-  const displayPlans = plans.length > 0 ? plans : [
-    {
-      id: 'basic',
-      name: 'Basic',
-      description: 'Free tier with limited features',
-      price: 0,
-      interval: 'month',
-      features: ['Basic recovery tracking', 'Daily check-ins', 'Community access'],
-      stripe_price_id: ''
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      description: 'Full access to all recovery tools',
-      price: 9.99,
-      interval: 'month',
-      features: [
-        'Everything in Basic',
-        'Advanced analytics',
-        'Personalized recommendations',
-        'Trigger tracking',
-        'Premium resources',
-        'Priority support'
-      ],
-      // Use a valid Stripe test mode price ID format
-      stripe_price_id: 'price_1234567890'
-    }
-  ];
-
   return (
     <div className="space-y-8">
       <div>
@@ -111,7 +81,7 @@ const SubscriptionPlans: React.FC = () => {
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
-        {displayPlans.map((plan) => {
+        {plans.map((plan) => {
           const isCurrentPlan = subscription && isPremium && plan.name === 'Premium';
           const isFree = plan.price === 0;
           
