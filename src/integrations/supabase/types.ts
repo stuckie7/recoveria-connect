@@ -146,11 +146,14 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           is_premium: boolean | null
+          location: string | null
+          occupation: string | null
           recovery_data: Json | null
           stripe_customer_id: string | null
           subscription_id: string | null
@@ -161,11 +164,14 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
           is_premium?: boolean | null
+          location?: string | null
+          occupation?: string | null
           recovery_data?: Json | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
@@ -176,11 +182,14 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           is_premium?: boolean | null
+          location?: string | null
+          occupation?: string | null
           recovery_data?: Json | null
           stripe_customer_id?: string | null
           subscription_id?: string | null

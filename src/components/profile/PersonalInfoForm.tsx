@@ -58,6 +58,8 @@ const PersonalInfoForm: React.FC = () => {
   const fetchProfileData = async () => {
     try {
       setIsLoading(true);
+      
+      // Fixed error handling to properly check for errors and handle data
       const { data, error } = await supabase
         .from('profiles')
         .select('full_name, username, bio, location, occupation')
@@ -65,24 +67,22 @@ const PersonalInfoForm: React.FC = () => {
         .single();
 
       if (error) {
-        throw error;
+        console.error('Error fetching profile data:', error);
+        toast.error('Failed to load profile data');
+        return;
       }
 
       if (data) {
-        setProfileData({
+        const profileValues = {
           full_name: data.full_name || '',
           username: data.username || '',
           bio: data.bio || '',
           location: data.location || '',
           occupation: data.occupation || '',
-        });
-        form.reset({
-          full_name: data.full_name || '',
-          username: data.username || '',
-          bio: data.bio || '',
-          location: data.location || '',
-          occupation: data.occupation || '',
-        });
+        };
+        
+        setProfileData(profileValues);
+        form.reset(profileValues);
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
