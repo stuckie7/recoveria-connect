@@ -92,13 +92,13 @@ export const setSobrietyStartDate = (date: Date): void => {
   // Calculate the current streak based on days between start date and today
   progress.currentStreak = daysBetween(normalizedDate);
   
+  // Update total days sober to equal the current streak
+  progress.totalDaysSober = progress.currentStreak;
+  
   // Update longest streak if needed
   if (progress.currentStreak > progress.longestStreak) {
     progress.longestStreak = progress.currentStreak;
   }
-  
-  // Update total days sober
-  progress.totalDaysSober = progress.currentStreak;
   
   // Reset milestones
   progress.milestones.forEach(milestone => {
@@ -126,8 +126,11 @@ export const updateStreak = (): void => {
   const startDate = new Date(progress.startDate);
   
   // Calculate the current streak based on days between start date and today
-  progress.currentStreak = daysBetween(startDate);
-  progress.totalDaysSober = progress.currentStreak;
+  const currentDays = daysBetween(startDate);
+  progress.currentStreak = currentDays;
+  
+  // Always set total sober days equal to current streak (days since start date)
+  progress.totalDaysSober = currentDays;
   
   // Update longest streak if needed
   if (progress.currentStreak > progress.longestStreak) {
@@ -154,6 +157,7 @@ export const recordRelapse = (date: Date): void => {
   progress.relapses += 1;
   progress.startDate = date.toISOString();
   progress.currentStreak = 0;
+  progress.totalDaysSober = 0; // Reset total sober days too when relapse occurs
   
   // Reset unachieved milestones
   progress.milestones.forEach(milestone => {

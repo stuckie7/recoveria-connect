@@ -18,9 +18,10 @@ export function useSobrietyDate() {
     const startDate = new Date(updatedProgress.startDate);
     const currentStreak = daysBetween(startDate);
     
-    // Update the current streak in the progress object
-    if (updatedProgress.currentStreak !== currentStreak) {
+    // Update the current streak and total sober days in the progress object
+    if (updatedProgress.currentStreak !== currentStreak || updatedProgress.totalDaysSober !== currentStreak) {
       updatedProgress.currentStreak = currentStreak;
+      updatedProgress.totalDaysSober = currentStreak; // Total sober days should be equal to current streak
       
       // Update longest streak if needed
       if (currentStreak > updatedProgress.longestStreak) {
@@ -61,9 +62,10 @@ export function useSobrietyDate() {
     // Update the local progress state with the newly saved data
     const updatedProgress = getUserProgress();
     
-    // Calculate and update the current streak
+    // Calculate and update the current streak and total sober days
     const currentStreak = daysBetween(normalizedDate);
     updatedProgress.currentStreak = currentStreak;
+    updatedProgress.totalDaysSober = currentStreak; // Total sober days equals current streak
     
     // Update longest streak if needed
     if (currentStreak > updatedProgress.longestStreak) {
