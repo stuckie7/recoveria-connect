@@ -78,8 +78,8 @@ const SobrietyCounter: React.FC = () => {
   
   return (
     <div className="w-full neo-card overflow-hidden animate-fade-in">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-medium text-muted-foreground">You've been sober for</h2>
+      <div className="text-center mb-4 bg-recovery-fun-iris text-white rounded-lg p-3">
+        <h2 className="text-xl font-medium">You've been sober for</h2>
       </div>
       
       <div className="flex flex-col items-center">
