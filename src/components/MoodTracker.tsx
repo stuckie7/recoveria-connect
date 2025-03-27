@@ -39,7 +39,7 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
   };
   
   return (
-    <div className="fun-card fun-card-mauve animate-fade-in">
+    <div className="rounded-xl p-6 shadow-lg animate-fade-in bg-gradient-to-br from-recovery-fun-leaf to-recovery-fun-mint">
       <h3 className="text-lg font-medium mb-4 text-white">How are you feeling today?</h3>
       
       <div className="grid grid-cols-5 gap-2">
