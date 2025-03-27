@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
     .slice(0, 3);
   
   return (
-    <div className="py-20 px-4 min-h-screen">
+    <div className="py-20 px-4 min-h-screen bg-recovery-fun-iris">
       <div className="max-w-5xl mx-auto">
         <div className="bg-recovery-fun-iris rounded-xl px-6 py-4 mb-6 shadow-md">
           <h1 className="text-3xl font-bold text-center lg:text-left text-white">Your Recovery Journey</h1>
