@@ -34,8 +34,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="py-20 px-4 min-h-screen bg-recovery-fun-iris">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-recovery-fun-iris rounded-xl px-6 py-4 mb-6 shadow-md">
-          <h1 className="text-3xl font-bold text-center lg:text-left text-white">Your Recovery Journey</h1>
+        <div className="bg-gradient-to-r from-purple-300 to-purple-200 rounded-xl px-6 py-4 mb-6 shadow-md">
+          <h1 className="text-3xl font-bold text-center lg:text-left text-purple-900">Your Recovery Journey</h1>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
