@@ -14,15 +14,14 @@ interface ImageCropperProps {
   onCropComplete: (croppedImage: Blob) => Promise<void>;
 }
 
-const ImageCropper: React.FC<ImageCropperProps> = ({
-  isOpen,
-  onClose,
-  imageUrl,
-  onCropComplete
+// Dialog body component to contain the cropping UI
+const CropperDialogBody = ({ 
+  imageUrl, 
+  containerRef 
+}: { 
+  imageUrl: string;
+  containerRef: React.RefObject<HTMLDivElement>;
 }) => {
-  const [uploading, setUploading] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
   const {
     position,
     zoom,
@@ -34,8 +33,83 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     handleMouseUp,
     handleTouchStart,
     handleTouchMove,
-    processCroppedImage
   } = useImageCropper();
+
+  return (
+    <div className="flex flex-col items-center gap-4 py-4" ref={containerRef}>
+      <CropPreview 
+        imageUrl={imageUrl}
+        zoom={zoom}
+        position={position}
+        isDragging={isDragging}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleMouseUp}
+      />
+      
+      <ZoomControls 
+        zoom={zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+      />
+      
+      <p className="text-sm text-muted-foreground text-center">
+        Drag to reposition or use zoom controls to adjust the fit
+      </p>
+    </div>
+  );
+};
+
+// Dialog footer with action buttons
+const CropperDialogFooter = ({
+  onClose,
+  onComplete,
+  uploading
+}: {
+  onClose: () => void;
+  onComplete: () => Promise<void>;
+  uploading: boolean;
+}) => {
+  return (
+    <DialogFooter>
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onClose}
+        disabled={uploading}
+      >
+        Cancel
+      </Button>
+      <Button
+        type="button"
+        onClick={onComplete}
+        className="gap-1"
+        disabled={uploading}
+      >
+        {uploading ? (
+          <Loader2 size={16} className="animate-spin mr-1" />
+        ) : (
+          <Check size={16} />
+        )}
+        {uploading ? 'Uploading...' : 'Apply'}
+      </Button>
+    </DialogFooter>
+  );
+};
+
+const ImageCropper: React.FC<ImageCropperProps> = ({
+  isOpen,
+  onClose,
+  imageUrl,
+  onCropComplete
+}) => {
+  const [uploading, setUploading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { processCroppedImage } = useImageCropper();
 
   const handleCropComplete = async () => {
     if (!imageUrl) return;
@@ -71,55 +145,16 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex flex-col items-center gap-4 py-4" ref={containerRef}>
-          <CropPreview 
-            imageUrl={imageUrl}
-            zoom={zoom}
-            position={position}
-            isDragging={isDragging}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleMouseUp}
-          />
-          
-          <ZoomControls 
-            zoom={zoom}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-          />
-          
-          <p className="text-sm text-muted-foreground text-center">
-            Drag to reposition or use zoom controls to adjust the fit
-          </p>
-        </div>
+        <CropperDialogBody 
+          imageUrl={imageUrl} 
+          containerRef={containerRef} 
+        />
         
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={uploading}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleCropComplete}
-            className="gap-1"
-            disabled={uploading}
-          >
-            {uploading ? (
-              <Loader2 size={16} className="animate-spin mr-1" />
-            ) : (
-              <Check size={16} />
-            )}
-            {uploading ? 'Uploading...' : 'Apply'}
-          </Button>
-        </DialogFooter>
+        <CropperDialogFooter 
+          onClose={onClose}
+          onComplete={handleCropComplete}
+          uploading={uploading}
+        />
       </DialogContent>
     </Dialog>
   );
