@@ -67,7 +67,10 @@ const SobrietyCounter: React.FC = () => {
     return paddedValue.split('').map((digit, index) => (
       <span 
         key={`digit-${index}-${value}`}
-        className="inline-block w-12 h-16 md:w-16 md:h-20 bg-white dark:bg-card rounded-lg shadow-neo flex items-center justify-center mx-0.5 overflow-hidden relative"
+        className={cn(
+          "inline-block w-12 h-16 md:w-16 md:h-20 rounded-lg shadow-neo flex items-center justify-center mx-0.5 overflow-hidden relative",
+          "bg-gradient-to-r from-recovery-blue-light to-recovery-green-light"
+        )}
       >
         <span className="text-2xl md:text-4xl font-semibold animate-scale-in">
           {digit}
