@@ -233,6 +233,51 @@ export type Database = {
         }
         Relationships: []
       }
+      recovery_resources: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          source: string | null
+          tags: string[] | null
+          title: string
+          type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          source?: string | null
+          tags?: string[] | null
+          title: string
+          type: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          source?: string | null
+          tags?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string
