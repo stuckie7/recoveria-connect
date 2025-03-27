@@ -14,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 25% 15%;
 
-    --primary: 210 90% 65%;
+    --primary: 186 73% 48%; /* Teal color */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 150 50% 70%;
-    --secondary-foreground: 150 50% 20%;
+    --secondary: 325 55% 44%; /* Burgundy color */
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 210 20% 92%;
     --muted-foreground: 210 25% 40%;
 
-    --accent: 210 40% 92%;
+    --accent: 342 35% 55%; /* Mauve color */
     --accent-foreground: 210 25% 15%;
 
     --destructive: 0 70% 60%;
@@ -31,9 +31,9 @@
 
     --border: 210 30% 88%;
     --input: 210 30% 88%;
-    --ring: 210 90% 65%;
+    --ring: 186 73% 48%;
 
-    --radius: 1rem;
+    --radius: 1.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -55,16 +55,16 @@
     --popover: 210 35% 10%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 210 90% 55%;
+    --primary: 186 73% 40%; /* Teal color, darker for dark mode */
     --primary-foreground: 210 20% 98%;
 
-    --secondary: 150 50% 40%;
-    --secondary-foreground: 150 10% 98%;
+    --secondary: 325 55% 40%; /* Burgundy color, darker for dark mode */
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 210 30% 18%;
     --muted-foreground: 210 20% 70%;
 
-    --accent: 210 30% 18%;
+    --accent: 342 35% 45%; /* Mauve color, darker for dark mode */
     --accent-foreground: 210 20% 98%;
 
     --destructive: 0 70% 50%;
@@ -72,7 +72,7 @@
 
     --border: 210 30% 20%;
     --input: 210 30% 20%;
-    --ring: 210 90% 55%;
+    --ring: 186 73% 40%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -155,12 +155,53 @@
     @apply bg-white rounded-xl shadow-inner px-4 py-3 focus:ring-2 focus:ring-primary/50 transition-all duration-200;
   }
 
+  /* New fun card styles */
+  .fun-card {
+    @apply rounded-3xl shadow-fun p-6 text-white transition-all duration-300 hover:-translate-y-1;
+  }
+
+  .fun-card-teal {
+    @apply bg-recovery-fun-teal;
+  }
+
+  .fun-card-burgundy {
+    @apply bg-recovery-fun-burgundy;
+  }
+
+  .fun-card-mauve {
+    @apply bg-recovery-fun-mauve;
+  }
+
+  .fun-card-amber {
+    @apply bg-recovery-fun-amber;
+  }
+
+  .fun-card-leaf {
+    @apply bg-recovery-fun-leaf;
+  }
+
+  .fun-card-cherry {
+    @apply bg-recovery-fun-cherry;
+  }
+
+  .fun-card-iris {
+    @apply bg-recovery-fun-iris;
+  }
+
+  .fun-card-mint {
+    @apply bg-recovery-fun-mint;
+  }
+
+  .fun-card-coral {
+    @apply bg-recovery-fun-coral;
+  }
+
   .hero-gradient {
-    @apply bg-gradient-to-br from-primary/20 via-background to-secondary/20;
+    @apply bg-gradient-to-br from-recovery-fun-teal via-background to-recovery-fun-coral;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-recovery-fun-teal to-recovery-fun-cherry;
   }
 
   .page-container {
@@ -168,11 +209,11 @@
   }
 
   .timeline-connector {
-    @apply absolute left-2.5 top-0 h-full w-0.5 bg-gradient-to-b from-primary to-secondary;
+    @apply absolute left-2.5 top-0 h-full w-0.5 bg-gradient-to-b from-recovery-fun-teal to-recovery-fun-cherry;
   }
 
   .milestone-dot {
-    @apply absolute top-1 left-0 w-5 h-5 rounded-full bg-primary shadow-lg z-10;
+    @apply absolute top-1 left-0 w-5 h-5 rounded-full bg-recovery-fun-teal shadow-lg z-10;
   }
   
   .card-hover {
@@ -184,7 +225,7 @@
   }
   
   .btn-glow::after {
-    @apply content-[''] absolute inset-0 z-[-1] opacity-0 transition-opacity duration-500 bg-gradient-to-r from-primary/60 to-secondary/60 blur-xl;
+    @apply content-[''] absolute inset-0 z-[-1] opacity-0 transition-opacity duration-500 bg-gradient-to-r from-recovery-fun-teal/60 to-recovery-fun-cherry/60 blur-xl;
   }
   
   .btn-glow:hover::after {

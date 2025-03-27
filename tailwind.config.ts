@@ -63,17 +63,32 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// App specific colors
+				// App specific colors - Updated with vibrant colors
 				recovery: {
 					blue: {
 						light: '#E0F2FF',
-						DEFAULT: '#99CFFF',
-						dark: '#1E88E5'
+						DEFAULT: '#22C1D6', // Teal like in the first card
+						dark: '#107D8D'
 					},
 					green: {
 						light: '#E6F4EA',
-						DEFAULT: '#A8DAB5',
-						dark: '#43A047'
+						DEFAULT: '#4CAF50',
+						dark: '#2E7D32'
+					},
+					purple: {
+						light: '#F3E5F5',
+						DEFAULT: '#8E2952', // Burgundy like in second card
+						dark: '#6A1B9A'
+					},
+					pink: {
+						light: '#FCE4EC',
+						DEFAULT: '#BD5D78', // Mauve like in third card
+						dark: '#AD1457'
+					},
+					orange: {
+						light: '#FFF3E0',
+						DEFAULT: '#E6953A', // Orange like in fourth card
+						dark: '#E65100'
 					},
 					neutral: {
 						lightest: '#FFFFFF',
@@ -81,6 +96,18 @@ export default {
 						DEFAULT: '#E8E8E8',
 						dark: '#BDBDBD',
 						darker: '#757575'
+					},
+					// New fun palette
+					fun: {
+						teal: '#22C1D6',
+						burgundy: '#8E2952',
+						mauve: '#BD5D78',
+						amber: '#E6953A',
+						leaf: '#8BC34A',
+						cherry: '#E91E63',
+						iris: '#5E35B1',
+						mint: '#26A69A',
+						coral: '#FF7043'
 					}
 				}
 			},
@@ -156,7 +183,8 @@ export default {
 			boxShadow: {
 				'neo': '6px 6px 10px rgba(0, 0, 0, 0.05), -6px -6px 10px rgba(255, 255, 255, 0.8)',
 				'neo-inner': 'inset 2px 2px 5px rgba(0, 0, 0, 0.05), inset -3px -3px 7px rgba(255, 255, 255, 0.8)',
-				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)'
+				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+				'fun': '0 8px 20px rgba(0, 0, 0, 0.1)'
 			},
 			backdropBlur: {
 				'xs': '2px',

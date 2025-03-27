@@ -9,14 +9,15 @@ interface MoodOption {
   label: string;
   icon: React.ElementType;
   color: string;
+  bgColor: string;
 }
 
 const moodOptions: MoodOption[] = [
-  { value: 'great', label: 'Great', icon: ThumbsUp, color: 'text-recovery-green-dark bg-recovery-green-light' },
-  { value: 'good', label: 'Good', icon: Smile, color: 'text-green-500 bg-green-50' },
-  { value: 'okay', label: 'Okay', icon: Meh, color: 'text-blue-500 bg-blue-50' },
-  { value: 'bad', label: 'Bad', icon: Frown, color: 'text-orange-500 bg-orange-50' },
-  { value: 'terrible', label: 'Terrible', icon: AlertTriangle, color: 'text-red-500 bg-red-50' },
+  { value: 'great', label: 'Great', icon: ThumbsUp, color: 'text-white', bgColor: 'bg-recovery-fun-leaf' },
+  { value: 'good', label: 'Good', icon: Smile, color: 'text-white', bgColor: 'bg-recovery-fun-teal' },
+  { value: 'okay', label: 'Okay', icon: Meh, color: 'text-white', bgColor: 'bg-recovery-fun-amber' },
+  { value: 'bad', label: 'Bad', icon: Frown, color: 'text-white', bgColor: 'bg-recovery-fun-coral' },
+  { value: 'terrible', label: 'Terrible', icon: AlertTriangle, color: 'text-white', bgColor: 'bg-recovery-fun-cherry' },
 ];
 
 interface MoodTrackerProps {
@@ -38,8 +39,8 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
   };
   
   return (
-    <div className="neo-card animate-fade-in">
-      <h3 className="text-lg font-medium mb-4">How are you feeling today?</h3>
+    <div className="fun-card fun-card-mauve animate-fade-in">
+      <h3 className="text-lg font-medium mb-4 text-white">How are you feeling today?</h3>
       
       <div className="grid grid-cols-5 gap-2">
         {moodOptions.map((option) => {
@@ -53,21 +54,19 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
               className={cn(
                 "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300",
                 isSelected
-                  ? `${option.color} shadow-lg transform scale-105`
-                  : "bg-white shadow-neo hover:bg-gray-50"
+                  ? `${option.bgColor} shadow-lg transform scale-105 ring-2 ring-white/50`
+                  : "bg-white/20 hover:bg-white/30"
               )}
             >
               <Icon 
                 size={24} 
                 className={cn(
                   "mb-2 transition-transform duration-300", 
+                  option.color,
                   isSelected && "animate-pulse-soft"
                 )} 
               />
-              <span className={cn(
-                "text-xs font-medium", 
-                isSelected ? "text-current" : "text-gray-600"
-              )}>
+              <span className="text-xs font-medium text-white">
                 {option.label}
               </span>
             </button>

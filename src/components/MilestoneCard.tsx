@@ -15,18 +15,24 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, index }) => {
   const getIcon = () => {
     switch (milestone.icon) {
       case 'star':
-        return <Star size={24} className="text-yellow-500" />;
+        return <Star size={24} className="text-yellow-300" />;
       case 'trophy':
-        return <Trophy size={24} className="text-yellow-600" />;
+        return <Trophy size={24} className="text-yellow-300" />;
       case 'crown':
-        return <Crown size={24} className="text-yellow-500" />;
+        return <Crown size={24} className="text-yellow-300" />;
       case 'medal':
-        return <Medal size={24} className="text-blue-500" />;
+        return <Medal size={24} className="text-recovery-fun-teal" />;
       case 'calendar':
-        return <Calendar size={24} className="text-green-500" />;
+        return <Calendar size={24} className="text-recovery-fun-leaf" />;
       default:
-        return <Award size={24} className="text-primary" />;
+        return <Award size={24} className="text-recovery-fun-cherry" />;
     }
+  };
+  
+  // Get the appropriate color based on index
+  const getCardColor = () => {
+    const colors = ['fun-card-teal', 'fun-card-burgundy', 'fun-card-amber', 'fun-card-leaf', 'fun-card-cherry'];
+    return colors[index % colors.length];
   };
 
   return (
@@ -47,7 +53,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, index }) => {
         <span className={cn(
           "absolute w-full h-full rounded-full",
           milestone.achieved 
-            ? "bg-gradient-to-r from-primary to-secondary animate-pulse-soft" 
+            ? "bg-gradient-to-r from-recovery-fun-teal to-recovery-fun-cherry animate-pulse-soft" 
             : "bg-muted"
         )} />
       </div>
@@ -55,35 +61,36 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({ milestone, index }) => {
       {/* Milestone card */}
       <div 
         className={cn(
-          "ml-4 glass-card p-4",
+          "ml-4 fun-card",
+          getCardColor(),
           milestone.achieved 
-            ? "border-primary/30" 
+            ? "" 
             : "opacity-70"
         )}
       >
         <div className="flex items-center mb-2">
-          <div className="mr-2 p-1 rounded-full bg-white/70 shadow-sm">
+          <div className="mr-2 p-1 rounded-full bg-white/20 shadow-sm">
             {getIcon()}
           </div>
           <div>
-            <h4 className="font-medium">{milestone.name}</h4>
-            <p className="text-xs text-muted-foreground">{milestone.description}</p>
+            <h4 className="font-medium text-white">{milestone.name}</h4>
+            <p className="text-xs text-white/80">{milestone.description}</p>
           </div>
         </div>
         
         <div className="flex items-center justify-between mt-2">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-white/80">
             {milestone.days} {milestone.days === 1 ? 'day' : 'days'}
           </div>
           
           {milestone.achieved && milestone.date && (
-            <div className="text-xs bg-recovery-blue-light text-recovery-blue-dark px-2 py-1 rounded-full">
+            <div className="text-xs bg-white/20 text-white px-2 py-1 rounded-full">
               Achieved {formatDate(milestone.date, { month: 'short', day: 'numeric' })}
             </div>
           )}
           
           {!milestone.achieved && (
-            <div className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+            <div className="text-xs bg-white/10 text-white/90 px-2 py-1 rounded-full">
               Upcoming
             </div>
           )}
