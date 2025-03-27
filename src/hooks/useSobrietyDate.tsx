@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { getUserProgress, setSobrietyStartDate } from '@/utils/storage';
 import { UserProgress } from '@/types';
+import { daysBetween } from '@/utils/dates';
 
 export function useSobrietyDate() {
   const [progress, setProgress] = useState<UserProgress>(getUserProgress());
@@ -27,7 +28,11 @@ export function useSobrietyDate() {
     }
     
     setSobrietyStartDate(selectedDate);
-    setProgress(getUserProgress());
+    
+    // Update the local progress state with the newly saved data
+    const updatedProgress = getUserProgress();
+    setProgress(updatedProgress);
+    
     setIsDatePickerOpen(false);
     
     toast.success('Sobriety date updated', {

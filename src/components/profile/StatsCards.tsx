@@ -9,6 +9,10 @@ interface StatsCardsProps {
 }
 
 const StatsCards: React.FC<StatsCardsProps> = ({ progress }) => {
+  // Calculate number of achieved milestones
+  const achievedMilestones = progress.milestones.filter(m => m.achieved).length;
+  const totalMilestones = progress.milestones.length;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <StatCard 
@@ -43,7 +47,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ progress }) => {
         iconColor="text-recovery-blue-dark"
         iconBgColor="bg-recovery-blue-light"
         label="Milestones achieved"
-        value={`${progress.milestones.filter(m => m.achieved).length}/${progress.milestones.length}`}
+        value={`${achievedMilestones}/${totalMilestones}`}
       />
     </div>
   );

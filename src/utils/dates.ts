@@ -68,7 +68,7 @@ export const formatDate = (date: Date | string, options: Intl.DateTimeFormatOpti
  * Get the next milestone date
  */
 export const getNextMilestoneDate = (startDate: Date | string, currentDays: number): Date => {
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const start = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
   
   // Common milestones in days
   const milestones = [1, 7, 30, 60, 90, 180, 365, 730, 1095]; // 1d, 1w, 1m, 2m, 3m, 6m, 1y, 2y, 3y
@@ -76,8 +76,9 @@ export const getNextMilestoneDate = (startDate: Date | string, currentDays: numb
   // Find the next milestone
   const nextMilestone = milestones.find(days => days > currentDays) || (currentDays + 30);
   
-  // Calculate the target date
+  // Create a new date object based on the start date
   const targetDate = new Date(start);
+  // Add the milestone days to the start date
   targetDate.setDate(targetDate.getDate() + nextMilestone);
   
   return targetDate;
@@ -108,7 +109,7 @@ export const getUpcomingMilestones = (startDate: Date | string, currentDays: num
     }
   }
   
-  // Calculate dates for each milestone
+  // Calculate dates for each milestone by adding days to the start date
   return upcomingMilestones.map(days => {
     const milestoneDate = new Date(start);
     milestoneDate.setDate(milestoneDate.getDate() + days);
