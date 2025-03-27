@@ -1,4 +1,3 @@
-
 /**
  * Date utilities for the recovery app
  */
@@ -7,6 +6,7 @@
  * Calculate the number of days between two dates
  */
 export const daysBetween = (start: Date | string, end: Date = new Date()): number => {
+  // Create new date objects to avoid modifying the original
   const startDate = typeof start === 'string' ? new Date(start) : new Date(start);
   const endDate = new Date(end);
   
@@ -64,17 +64,19 @@ export const formatDate = (date: Date | string, options: Intl.DateTimeFormatOpti
   return dateObj.toLocaleDateString('en-US', { ...defaultOptions, ...options });
 };
 
+// Define standard milestone days for consistency across the app
+export const MILESTONE_DAYS = [1, 7, 30, 60, 90, 180, 365, 730, 1095]; // 1d, 1w, 1m, 2m, 3m, 6m, 1y, 2y, 3y
+
 /**
  * Get the next milestone date
  */
 export const getNextMilestoneDate = (startDate: Date | string, currentDays: number): Date => {
+  // Create a new date object to avoid modifying the original
   const start = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
-  
-  // Common milestones in days
-  const milestones = [1, 7, 30, 60, 90, 180, 365, 730, 1095]; // 1d, 1w, 1m, 2m, 3m, 6m, 1y, 2y, 3y
+  start.setHours(0, 0, 0, 0);
   
   // Find the next milestone
-  const nextMilestone = milestones.find(days => days > currentDays) || (currentDays + 30);
+  const nextMilestone = MILESTONE_DAYS.find(days => days > currentDays) || (currentDays + 30);
   
   // Create a new date object based on the start date
   const targetDate = new Date(start);
@@ -88,13 +90,12 @@ export const getNextMilestoneDate = (startDate: Date | string, currentDays: numb
  * Get upcoming milestones based on current progress
  */
 export const getUpcomingMilestones = (startDate: Date | string, currentDays: number, count = 3): { days: number, date: Date }[] => {
+  // Create a new date object to avoid modifying the original
   const start = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
-  
-  // Common milestones in days
-  const milestones = [1, 7, 30, 60, 90, 180, 365, 730, 1095]; // 1d, 1w, 1m, 2m, 3m, 6m, 1y, 2y, 3y
+  start.setHours(0, 0, 0, 0);
   
   // Filter to get only upcoming milestones
-  const upcomingMilestones = milestones
+  const upcomingMilestones = MILESTONE_DAYS
     .filter(days => days > currentDays)
     .slice(0, count);
   

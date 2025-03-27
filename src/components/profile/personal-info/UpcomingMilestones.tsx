@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar, Award, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSobrietyDate } from '@/hooks/useSobrietyDate';
-import { daysBetween, getUpcomingMilestones, getMilestoneDescription } from '@/utils/dates';
+import { daysBetween, getUpcomingMilestones, getMilestoneDescription, MILESTONE_DAYS } from '@/utils/dates';
 
 const UpcomingMilestones: React.FC = () => {
   const { progress } = useSobrietyDate();

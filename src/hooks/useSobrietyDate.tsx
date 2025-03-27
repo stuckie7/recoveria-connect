@@ -17,17 +17,28 @@ export function useSobrietyDate() {
   }, []);
   
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const date = new Date(event.target.value);
+    // Create a new date object without timezone conversion issues
+    const dateValue = event.target.value;
+    const [year, month, day] = dateValue.split('-').map(Number);
+    // Note: month is 0-indexed in JavaScript Date
+    const date = new Date(year, month - 1, day);
     setSelectedDate(date);
   };
   
   const handleSaveDate = () => {
-    if (selectedDate > new Date()) {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > now) {
       toast.error('Start date cannot be in the future');
       return;
     }
     
-    setSobrietyStartDate(selectedDate);
+    // Ensure we're using a date with the time component zeroed out
+    const normalizedDate = new Date(selectedDate);
+    normalizedDate.setHours(0, 0, 0, 0);
+    
+    setSobrietyStartDate(normalizedDate);
     
     // Update the local progress state with the newly saved data
     const updatedProgress = getUserProgress();
@@ -36,7 +47,7 @@ export function useSobrietyDate() {
     setIsDatePickerOpen(false);
     
     toast.success('Sobriety date updated', {
-      description: `Your journey now starts from ${selectedDate.toLocaleDateString('en-US', { 
+      description: `Your journey now starts from ${normalizedDate.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 

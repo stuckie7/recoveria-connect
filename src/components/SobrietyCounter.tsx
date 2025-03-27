@@ -32,12 +32,15 @@ const SobrietyCounter: React.FC = () => {
   const updateCounters = (start: Date) => {
     const now = new Date();
     
+    // Make a copy of the start date to ensure we don't modify the original
+    const startCopy = new Date(start);
+    
     // Calculate days - make sure we're using our corrected daysBetween function
-    const totalDays = daysBetween(start, now);
+    const totalDays = daysBetween(startCopy, now);
     setDays(totalDays);
     
     // Calculate hours and minutes
-    const totalMilliseconds = now.getTime() - start.getTime();
+    const totalMilliseconds = now.getTime() - startCopy.getTime();
     const totalHours = Math.floor(totalMilliseconds / (1000 * 60 * 60));
     const hoursToday = totalHours % 24;
     setHours(hoursToday);
@@ -46,16 +49,16 @@ const SobrietyCounter: React.FC = () => {
     const minutesThisHour = totalMinutes % 60;
     setMinutes(minutesThisHour);
     
-    // Calculate next milestone
+    // Common milestones in days - matching the ones in utils/dates.ts
+    const milestones = [1, 7, 30, 60, 90, 180, 365, 730, 1095];
+    
+    // Find the next milestone
+    const nextMilestoneDay = milestones.find(days => days > totalDays) || (totalDays + 30);
+    
+    // Calculate the date for this milestone
     const nextMilestoneObj = {
-      days: totalDays < 1 ? 1 : 
-            totalDays < 7 ? 7 :
-            totalDays < 30 ? 30 :
-            totalDays < 90 ? 90 :
-            totalDays < 180 ? 180 :
-            totalDays < 365 ? 365 : 
-            Math.ceil(totalDays / 365) * 365,
-      date: getNextMilestoneDate(start, totalDays)
+      days: nextMilestoneDay,
+      date: getNextMilestoneDate(startCopy, totalDays)
     };
     
     setNextMilestone(nextMilestoneObj);

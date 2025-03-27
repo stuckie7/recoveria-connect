@@ -81,7 +81,12 @@ export const achieveMilestone = (milestoneId: string): void => {
  */
 export const setSobrietyStartDate = (date: Date): void => {
   const progress = getUserProgress();
-  progress.startDate = date.toISOString();
+  
+  // Normalize the date to midnight to avoid timezone issues
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
+  
+  progress.startDate = normalizedDate.toISOString();
   progress.currentStreak = 0;
   
   // Reset milestones
