@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Users, Bookmark, User, Menu, X, LogOut, Sparkles, Book } from 'lucide-react';
+import { Home, Users, Bookmark, User, Menu, X, LogOut, Flame, ArrowUp, Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
@@ -139,8 +139,11 @@ const Navbar: React.FC = () => {
       <div className="container max-w-6xl mx-auto px-6">
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary mr-3 flex items-center justify-center shadow-md group-hover:shadow-primary/20 transition-all duration-300">
-              <Sparkles size={20} className="text-white" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 mr-3 flex items-center justify-center shadow-md group-hover:shadow-primary/20 transition-all duration-300">
+              <div className="relative">
+                <Flame size={16} className="text-white" />
+                <ArrowUp size={10} className="text-yellow-300 absolute -top-2 left-1/2 -ml-1.5 animate-float" />
+              </div>
             </div>
             <span className="font-bold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Phoenix</span>
           </Link>
