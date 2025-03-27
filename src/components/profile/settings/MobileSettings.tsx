@@ -6,6 +6,17 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+interface MobileSettings {
+  enableOfflineMode: boolean;
+  enablePushNotifications: boolean;
+  enableBackgroundSync: boolean;
+}
+
+interface RecoveryData {
+  mobile?: MobileSettings;
+  [key: string]: any;
+}
+
 const MobileSettings: React.FC = () => {
   const { user } = useAuth();
   const [enableOfflineMode, setEnableOfflineMode] = useState<boolean>(true);
@@ -39,8 +50,10 @@ const MobileSettings: React.FC = () => {
           
         if (error) throw error;
         
-        if (data?.recovery_data?.mobile) {
-          const mobileSettings = data.recovery_data.mobile;
+        const recoveryData = data?.recovery_data as RecoveryData | null;
+        
+        if (recoveryData?.mobile) {
+          const mobileSettings = recoveryData.mobile;
           setEnableOfflineMode(mobileSettings.enableOfflineMode ?? true);
           setEnablePushNotifications(mobileSettings.enablePushNotifications ?? true);
           setEnableBackgroundSync(mobileSettings.enableBackgroundSync ?? true);
@@ -78,7 +91,7 @@ const MobileSettings: React.FC = () => {
           
         if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
         
-        const recoveryData = existingData?.recovery_data || {};
+        const recoveryData = (existingData?.recovery_data as RecoveryData) || {};
         recoveryData.mobile = settings;
         
         const { error: updateError } = await supabase

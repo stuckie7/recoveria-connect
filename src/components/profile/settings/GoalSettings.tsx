@@ -18,6 +18,11 @@ interface CustomMilestone {
   isActive: boolean;
 }
 
+interface RecoveryData {
+  customMilestones?: CustomMilestone[];
+  [key: string]: any;
+}
+
 const GoalSettings: React.FC = () => {
   const { user } = useAuth();
   const [customMilestones, setCustomMilestones] = useState<CustomMilestone[]>([]);
@@ -56,8 +61,10 @@ const GoalSettings: React.FC = () => {
             
           if (error) throw error;
           
-          if (data?.recovery_data?.customMilestones) {
-            setCustomMilestones(data.recovery_data.customMilestones);
+          const recoveryData = data?.recovery_data as RecoveryData | null;
+          
+          if (recoveryData?.customMilestones) {
+            setCustomMilestones(recoveryData.customMilestones);
           }
         } catch (error) {
           console.error('Error loading custom milestones:', error);
@@ -88,7 +95,7 @@ const GoalSettings: React.FC = () => {
           
         if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
         
-        const recoveryData = existingData?.recovery_data || {};
+        const recoveryData = (existingData?.recovery_data as RecoveryData) || {};
         recoveryData.customMilestones = updatedMilestones;
         
         const { error: updateError } = await supabase

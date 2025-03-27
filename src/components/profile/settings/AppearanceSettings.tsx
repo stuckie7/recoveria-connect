@@ -19,6 +19,11 @@ interface AppearancePreferences {
   useGlassmorphism: boolean;
 }
 
+interface RecoveryData {
+  appearance?: AppearancePreferences;
+  [key: string]: any;
+}
+
 const DEFAULT_PREFERENCES: AppearancePreferences = {
   theme: 'system',
   accentColor: 'blue',
@@ -69,8 +74,10 @@ const AppearanceSettings: React.FC = () => {
             
           if (error) throw error;
           
-          if (data?.recovery_data?.appearance) {
-            const appearancePrefs = data.recovery_data.appearance;
+          const recoveryData = data?.recovery_data as RecoveryData | null;
+          
+          if (recoveryData?.appearance) {
+            const appearancePrefs = recoveryData.appearance;
             setPreferences(appearancePrefs);
             applyTheme(appearancePrefs.theme);
             applyAccentColor(appearancePrefs.accentColor);
@@ -108,7 +115,7 @@ const AppearanceSettings: React.FC = () => {
           
         if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
         
-        const recoveryData = existingData?.recovery_data || {};
+        const recoveryData = (existingData?.recovery_data as RecoveryData) || {};
         recoveryData.appearance = newPreferences;
         
         const { error: updateError } = await supabase

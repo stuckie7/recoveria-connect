@@ -8,6 +8,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+interface NotificationSettings {
+  enableReminders: boolean;
+  reminderTime: number;
+  frequency: string;
+}
+
+interface RecoveryData {
+  notifications?: NotificationSettings;
+  [key: string]: any;
+}
+
 const NotificationSettings: React.FC = () => {
   const { user } = useAuth();
   const [enableReminders, setEnableReminders] = useState<boolean>(true);
@@ -41,8 +52,10 @@ const NotificationSettings: React.FC = () => {
           
         if (error) throw error;
         
-        if (data?.recovery_data?.notifications) {
-          const notifSettings = data.recovery_data.notifications;
+        const recoveryData = data?.recovery_data as RecoveryData | null;
+        
+        if (recoveryData?.notifications) {
+          const notifSettings = recoveryData.notifications;
           setEnableReminders(notifSettings.enableReminders);
           setReminderTime(notifSettings.reminderTime);
           setFrequency(notifSettings.frequency);
@@ -76,7 +89,7 @@ const NotificationSettings: React.FC = () => {
           
         if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
         
-        const recoveryData = existingData?.recovery_data || {};
+        const recoveryData = (existingData?.recovery_data as RecoveryData) || {};
         recoveryData.notifications = settings;
         
         const { error: updateError } = await supabase
