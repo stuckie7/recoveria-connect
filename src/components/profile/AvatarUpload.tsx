@@ -1,12 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Upload, Camera, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Upload, Camera, Loader2, Move, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface AvatarUploadProps {
   size?: 'sm' | 'md' | 'lg';
@@ -26,6 +29,14 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showCropDialog, setShowCropDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const previewRef = useRef<HTMLDivElement>(null);
   
   // Fetch current avatar when component mounts
   React.useEffect(() => {
@@ -33,6 +44,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       fetchAvatar(user);
     }
   }, [user]);
+
+  // Cleanup preview URL when dialog closes
+  React.useEffect(() => {
+    if (!showCropDialog && previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  }, [showCropDialog, previewUrl]);
   
   const fetchAvatar = async (user: User) => {
     try {
@@ -50,18 +68,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     }
   };
   
-  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      setUploading(true);
-      
       if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
+        return;
       }
       
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      // Store avatars in user-specific folders using their user ID
-      const filePath = `${user!.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       // Check file size (limit to 2MB)
       if (file.size > 2 * 1024 * 1024) {
@@ -79,10 +92,124 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         return;
       }
       
-      // Upload file to Supabase storage
+      // Create preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      setSelectedFile(file);
+      
+      // Reset position and zoom
+      setPosition({ x: 0, y: 0 });
+      setZoom(1);
+      
+      // Open crop dialog
+      setShowCropDialog(true);
+    } catch (error) {
+      console.error('Error handling file select:', error);
+      toast.error('Failed to process image');
+    } finally {
+      // Reset the input
+      const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    }
+  };
+  
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!previewRef.current) return;
+    
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !previewRef.current) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    // Limit movement based on container size and zoom
+    const containerSize = previewRef.current.offsetWidth;
+    const imgSize = containerSize * zoom;
+    const maxOffset = (imgSize - containerSize) / 2;
+    
+    const boundedX = Math.max(Math.min(newX, maxOffset), -maxOffset);
+    const boundedY = Math.max(Math.min(newY, maxOffset), -maxOffset);
+    
+    setPosition({ x: boundedX, y: boundedY });
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.1, 3));
+  };
+  
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.1, 1));
+  };
+  
+  const uploadAvatar = async () => {
+    if (!selectedFile || !user) return;
+    
+    try {
+      setShowCropDialog(false);
+      setUploading(true);
+      
+      // Create a canvas to crop the image
+      const canvas = document.createElement('canvas');
+      const containerSize = 300; // Fixed size for consistent cropping
+      canvas.width = containerSize;
+      canvas.height = containerSize;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Could not create canvas context');
+      }
+      
+      // Create an image element to draw on canvas
+      const img = new Image();
+      img.src = previewUrl!;
+      
+      // Wait for image to load
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      // Calculate dimensions
+      const imgSize = containerSize * zoom;
+      const offsetX = (containerSize - imgSize) / 2 + position.x;
+      const offsetY = (containerSize - imgSize) / 2 + position.y;
+      
+      // Clear canvas and draw image with position and zoom
+      ctx.clearRect(0, 0, containerSize, containerSize);
+      ctx.drawImage(img, offsetX, offsetY, imgSize, imgSize);
+      
+      // Convert canvas to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to create blob'));
+        }, 'image/jpeg', 0.9);
+      });
+      
+      // Create a File object from the blob
+      const croppedFile = new File([blob], selectedFile.name, { 
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+      
+      // Upload to Supabase
+      const fileExt = 'jpg'; // We converted to JPEG above
+      const filePath = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, croppedFile);
         
       if (uploadError) {
         throw uploadError;
@@ -99,7 +226,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
-        .eq('id', user!.id);
+        .eq('id', user.id);
         
       if (updateError) {
         throw updateError;
@@ -122,9 +249,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       console.error('Error uploading avatar:', error);
     } finally {
       setUploading(false);
-      // Reset the input
-      const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      setSelectedFile(null);
+      setPreviewUrl(null);
     }
   };
   
@@ -152,7 +278,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           id="avatar-upload"
           type="file"
           accept="image/*"
-          onChange={uploadAvatar}
+          onChange={handleFileSelect}
           disabled={uploading}
           className="hidden"
         />
@@ -177,6 +303,100 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           {avatarUrl ? 'Change Picture' : 'Upload Picture'}
         </Button>
       </label>
+
+      <Dialog open={showCropDialog} onOpenChange={setShowCropDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Position Your Photo</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div 
+              ref={previewRef}
+              className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-2 border-primary/20 cursor-move"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              {previewUrl && (
+                <div 
+                  className="absolute"
+                  style={{
+                    width: `${zoom * 100}%`,
+                    height: `${zoom * 100}%`,
+                    left: '50%',
+                    top: '50%',
+                    transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px)`,
+                  }}
+                >
+                  <img 
+                    src={previewUrl} 
+                    className="w-full h-full object-cover"
+                    draggable="false"
+                    alt="Preview" 
+                  />
+                </div>
+              )}
+              
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <Move size={40} className="text-white/50" />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleZoomOut}
+                disabled={zoom <= 1}
+              >
+                <ZoomOut size={18} />
+              </Button>
+              
+              <div className="w-32 h-2 bg-muted rounded-full">
+                <div 
+                  className="h-full bg-primary rounded-full"
+                  style={{ width: `${((zoom - 1) / 2) * 100}%` }}
+                />
+              </div>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleZoomIn}
+                disabled={zoom >= 3}
+              >
+                <ZoomIn size={18} />
+              </Button>
+            </div>
+            
+            <p className="text-sm text-muted-foreground text-center">
+              Drag to reposition or use zoom controls to adjust the fit
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCropDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={uploadAvatar}
+              className="gap-1"
+            >
+              <Check size={16} />
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
