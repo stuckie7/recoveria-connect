@@ -5,9 +5,8 @@ import {
   AlarmClock, 
   Award, 
   ChevronsRight, 
-  Sun, 
-  Moon, 
-  Palette 
+  Palette,
+  Smartphone 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -18,6 +17,7 @@ import {
 import NotificationSettings from './settings/NotificationSettings';
 import AppearanceSettings from './settings/AppearanceSettings';
 import GoalSettings from './settings/GoalSettings';
+import MobileSettings from './settings/MobileSettings';
 
 const SettingsList: React.FC = () => {
   const navigate = useNavigate();
@@ -93,6 +93,26 @@ const SettingsList: React.FC = () => {
             </CollapsibleTrigger>
             <CollapsibleContent className="px-3 pt-2 pb-3">
               <GoalSettings />
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible 
+            open={openSection === 'mobile'} 
+            onOpenChange={() => toggleSection('mobile')}
+            className="w-full"
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted rounded-lg transition-colors">
+              <div className="flex items-center">
+                <Smartphone size={18} className="mr-3 text-muted-foreground" />
+                <span>Mobile App Preferences</span>
+              </div>
+              <ChevronsRight 
+                size={18} 
+                className={`text-muted-foreground transition-transform duration-200 ${openSection === 'mobile' ? 'rotate-90' : ''}`} 
+              />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="px-3 pt-2 pb-3">
+              <MobileSettings />
             </CollapsibleContent>
           </Collapsible>
         </div>
