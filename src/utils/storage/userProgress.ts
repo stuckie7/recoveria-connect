@@ -1,11 +1,10 @@
-
 /**
  * User progress storage utilities
  */
 
-import { UserProgress, CheckIn } from '@/types';
+import { UserProgress, CheckIn, Milestone } from '@/types';
 import { STORAGE_KEYS, DEFAULT_MILESTONES } from './constants';
-import { daysBetween } from '@/utils/dates';
+import { daysBetween, generateMilestoneName, getMilestoneIcon } from '@/utils/dates';
 
 /**
  * Initialize user progress with default values
@@ -78,42 +77,87 @@ export const achieveMilestone = (milestoneId: string): void => {
 };
 
 /**
+ * Generate monthly milestones based on days sober
+ * This dynamically creates milestone entries for each month
+ */
+export const generateMonthlyMilestones = (daysSober: number): Milestone[] => {
+  const completedMonths = Math.floor(daysSober / 30);
+  const milestones: Milestone[] = [];
+  
+  if (daysSober >= 1) {
+    milestones.push({
+      id: '1',
+      days: 1,
+      name: 'First Day',
+      description: 'The most important step of your journey',
+      achieved: true,
+      date: new Date(Date.now() - (daysSober - 1) * 24 * 60 * 60 * 1000).toISOString(),
+      icon: 'star'
+    });
+  }
+  
+  if (daysSober >= 7) {
+    milestones.push({
+      id: '7',
+      days: 7,
+      name: 'One Week',
+      description: 'A full week of progress',
+      achieved: true,
+      date: new Date(Date.now() - (daysSober - 7) * 24 * 60 * 60 * 1000).toISOString(),
+      icon: 'medal'
+    });
+  }
+  
+  for (let month = 1; month <= completedMonths; month++) {
+    const days = month * 30;
+    if (days <= daysSober) {
+      milestones.push({
+        id: `${days}`,
+        days,
+        name: generateMilestoneName(days),
+        description: `${month} month${month > 1 ? 's' : ''} of dedication`,
+        achieved: true,
+        date: new Date(Date.now() - (daysSober - days) * 24 * 60 * 60 * 1000).toISOString(),
+        icon: getMilestoneIcon(days)
+      });
+    }
+  }
+  
+  for (let i = 1; i <= 3; i++) {
+    const nextMonth = completedMonths + i;
+    const days = nextMonth * 30;
+    milestones.push({
+      id: `${days}`,
+      days,
+      name: generateMilestoneName(days),
+      description: `${nextMonth} month${nextMonth > 1 ? 's' : ''} of dedication`,
+      achieved: false,
+      icon: getMilestoneIcon(days)
+    });
+  }
+  
+  return milestones;
+};
+
+/**
  * Set sobriety start date
  */
 export const setSobrietyStartDate = (date: Date): void => {
   const progress = getUserProgress();
   
-  // Normalize the date to midnight to avoid timezone issues
   const normalizedDate = new Date(date);
   normalizedDate.setHours(0, 0, 0, 0);
   
   progress.startDate = normalizedDate.toISOString();
   
-  // Calculate the current streak based on days between start date and today
   progress.currentStreak = daysBetween(normalizedDate);
-  
-  // Update total days sober to equal the current streak
   progress.totalDaysSober = progress.currentStreak;
   
-  // Update longest streak if needed
   if (progress.currentStreak > progress.longestStreak) {
     progress.longestStreak = progress.currentStreak;
   }
   
-  // Reset milestones
-  progress.milestones.forEach(milestone => {
-    // Mark milestones as achieved if the current streak exceeds their day requirement
-    if (progress.currentStreak >= milestone.days) {
-      milestone.achieved = true;
-      // Use a date that represents when this milestone would have been achieved
-      const milestoneDate = new Date(normalizedDate);
-      milestoneDate.setDate(milestoneDate.getDate() + milestone.days);
-      milestone.date = milestoneDate.toISOString();
-    } else {
-      milestone.achieved = false;
-      delete milestone.date;
-    }
-  });
+  progress.milestones = generateMonthlyMilestones(progress.currentStreak);
   
   saveUserProgress(progress);
 };
@@ -125,25 +169,33 @@ export const updateStreak = (): void => {
   const progress = getUserProgress();
   const startDate = new Date(progress.startDate);
   
-  // Calculate the current streak based on days between start date and today
   const currentDays = daysBetween(startDate);
   progress.currentStreak = currentDays;
-  
-  // Always set total sober days equal to current streak (days since start date)
   progress.totalDaysSober = currentDays;
   
-  // Update longest streak if needed
   if (progress.currentStreak > progress.longestStreak) {
     progress.longestStreak = progress.currentStreak;
   }
   
-  // Check if any milestones have been reached
+  let milestonesUpdated = false;
+  
   progress.milestones.forEach(milestone => {
     if (!milestone.achieved && progress.currentStreak >= milestone.days) {
       milestone.achieved = true;
       milestone.date = new Date().toISOString();
+      milestonesUpdated = true;
     }
   });
+  
+  const highestMilestone = progress.milestones.reduce((max, m) => Math.max(max, m.days), 0);
+  const monthsCompleted = Math.floor(currentDays / 30);
+  const highestMonthMilestone = Math.floor(highestMilestone / 30);
+  
+  if (monthsCompleted > highestMonthMilestone) {
+    const newMilestones = generateMonthlyMilestones(currentDays);
+    progress.milestones = newMilestones;
+    milestonesUpdated = true;
+  }
   
   saveUserProgress(progress);
 };
@@ -157,14 +209,9 @@ export const recordRelapse = (date: Date): void => {
   progress.relapses += 1;
   progress.startDate = date.toISOString();
   progress.currentStreak = 0;
-  progress.totalDaysSober = 0; // Reset total sober days too when relapse occurs
+  progress.totalDaysSober = 0;
   
-  // Reset unachieved milestones
-  progress.milestones.forEach(milestone => {
-    if (!milestone.achieved) {
-      delete milestone.date;
-    }
-  });
+  progress.milestones = DEFAULT_MILESTONES;
   
   saveUserProgress(progress);
 };

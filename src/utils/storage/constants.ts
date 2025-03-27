@@ -1,4 +1,3 @@
-
 /**
  * Storage constants for the recovery app
  */
@@ -55,12 +54,20 @@ export const DEFAULT_STRATEGIES: CopingStrategy[] = [
   },
 ];
 
-// Default milestones
+// Default milestones with standard achievements plus monthly milestones
 export const DEFAULT_MILESTONES = [
   { id: '1', days: 1, name: 'First Day', description: 'The most important step of your journey', achieved: false, icon: 'star' },
   { id: '2', days: 7, name: 'One Week', description: 'A full week of progress', achieved: false, icon: 'medal' },
   { id: '3', days: 30, name: 'One Month', description: 'Thirty days of strength', achieved: false, icon: 'calendar' },
-  { id: '4', days: 90, name: 'Three Months', description: 'A quarter year of transformation', achieved: false, icon: 'trophy' },
-  { id: '5', days: 180, name: 'Six Months', description: 'Half a year of dedication', achieved: false, icon: 'award' },
-  { id: '6', days: 365, name: 'One Year', description: 'A full year of renewed life', achieved: false, icon: 'crown' },
+  { id: '4', days: 60, name: 'Two Months', description: 'Two months of dedication', achieved: false, icon: 'calendar' },
+  { id: '5', days: 90, name: 'Three Months', description: 'A quarter year of transformation', achieved: false, icon: 'trophy' },
+  { id: '6', days: 120, name: 'Four Months', description: 'Four months of consistency', achieved: false, icon: 'calendar' },
+  { id: '7', days: 150, name: 'Five Months', description: 'Five months of perseverance', achieved: false, icon: 'calendar' },
+  { id: '8', days: 180, name: 'Six Months', description: 'Half a year of dedication', achieved: false, icon: 'award' },
+  { id: '9', days: 210, name: 'Seven Months', description: 'Seven months of progress', achieved: false, icon: 'calendar' },
+  { id: '10', days: 240, name: 'Eight Months', description: 'Eight months of determination', achieved: false, icon: 'calendar' },
+  { id: '11', days: 270, name: 'Nine Months', description: 'Nine months of growth', achieved: false, icon: 'calendar' },
+  { id: '12', days: 300, name: 'Ten Months', description: 'Ten months of resilience', achieved: false, icon: 'calendar' },
+  { id: '13', days: 330, name: 'Eleven Months', description: 'Eleven months of strength', achieved: false, icon: 'calendar' },
+  { id: '14', days: 365, name: 'One Year', description: 'A full year of renewed life', achieved: false, icon: 'crown' },
 ];

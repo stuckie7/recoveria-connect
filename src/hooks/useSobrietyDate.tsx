@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { getUserProgress, setSobrietyStartDate } from '@/utils/storage';
+import { getUserProgress, setSobrietyStartDate, updateStreak } from '@/utils/storage';
 import { UserProgress } from '@/types';
 import { daysBetween } from '@/utils/dates';
 
@@ -12,6 +12,7 @@ export function useSobrietyDate() {
   
   // Update progress when it changes and calculate current streak
   useEffect(() => {
+    // Get the latest progress
     const updatedProgress = getUserProgress();
     
     // Calculate the current streak based on days between start date and today
@@ -33,6 +34,9 @@ export function useSobrietyDate() {
     }
     
     setProgress(updatedProgress);
+    
+    // Run updateStreak to check for and award any new milestones
+    updateStreak();
   }, []);
   
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {

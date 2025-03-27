@@ -9,6 +9,7 @@ import CommunityPreview from '@/components/CommunityPreview';
 import EmergencySupport from '@/components/EmergencySupport';
 import MilestoneCard from '@/components/MilestoneCard';
 import { UpcomingMilestones } from '@/components/profile/personal-info';
+import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
   useEffect(() => {
@@ -23,6 +24,26 @@ const Dashboard: React.FC = () => {
     const hasTodayCheckIn = progress.checkIns.some(
       checkIn => checkIn.date.split('T')[0] === today
     );
+
+    // Check for newly achieved milestones to show toast notifications
+    const recentMilestones = progress.milestones.filter(m => {
+      if (!m.achieved || !m.date) return false;
+      
+      // Check if milestone was achieved in the last day
+      const achievedDate = new Date(m.date);
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      
+      return achievedDate > oneDayAgo;
+    });
+
+    // Show toast notifications for recent milestones
+    recentMilestones.forEach(milestone => {
+      toast.success(`Milestone achieved: ${milestone.name}!`, {
+        description: milestone.description,
+        duration: 5000
+      });
+    });
   }, []);
   
   const { milestones } = getUserProgress();
