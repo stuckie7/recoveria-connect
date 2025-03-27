@@ -5,6 +5,7 @@
 
 import { UserProgress, CheckIn } from '@/types';
 import { STORAGE_KEYS, DEFAULT_MILESTONES } from './constants';
+import { daysBetween } from '@/utils/dates';
 
 /**
  * Initialize user progress with default values
@@ -87,12 +88,31 @@ export const setSobrietyStartDate = (date: Date): void => {
   normalizedDate.setHours(0, 0, 0, 0);
   
   progress.startDate = normalizedDate.toISOString();
-  progress.currentStreak = 0;
+  
+  // Calculate the current streak based on days between start date and today
+  progress.currentStreak = daysBetween(normalizedDate);
+  
+  // Update longest streak if needed
+  if (progress.currentStreak > progress.longestStreak) {
+    progress.longestStreak = progress.currentStreak;
+  }
+  
+  // Update total days sober
+  progress.totalDaysSober = progress.currentStreak;
   
   // Reset milestones
   progress.milestones.forEach(milestone => {
-    milestone.achieved = false;
-    delete milestone.date;
+    // Mark milestones as achieved if the current streak exceeds their day requirement
+    if (progress.currentStreak >= milestone.days) {
+      milestone.achieved = true;
+      // Use a date that represents when this milestone would have been achieved
+      const milestoneDate = new Date(normalizedDate);
+      milestoneDate.setDate(milestoneDate.getDate() + milestone.days);
+      milestone.date = milestoneDate.toISOString();
+    } else {
+      milestone.achieved = false;
+      delete milestone.date;
+    }
   });
   
   saveUserProgress(progress);
@@ -103,11 +123,11 @@ export const setSobrietyStartDate = (date: Date): void => {
  */
 export const updateStreak = (): void => {
   const progress = getUserProgress();
-  const today = new Date();
+  const startDate = new Date(progress.startDate);
   
-  // Increment current streak
-  progress.currentStreak += 1;
-  progress.totalDaysSober += 1;
+  // Calculate the current streak based on days between start date and today
+  progress.currentStreak = daysBetween(startDate);
+  progress.totalDaysSober = progress.currentStreak;
   
   // Update longest streak if needed
   if (progress.currentStreak > progress.longestStreak) {
@@ -118,7 +138,7 @@ export const updateStreak = (): void => {
   progress.milestones.forEach(milestone => {
     if (!milestone.achieved && progress.currentStreak >= milestone.days) {
       milestone.achieved = true;
-      milestone.date = today.toISOString();
+      milestone.date = new Date().toISOString();
     }
   });
   

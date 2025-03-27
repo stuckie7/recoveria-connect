@@ -12,18 +12,17 @@ import { UpcomingMilestones } from '@/components/profile/personal-info';
 
 const Dashboard: React.FC = () => {
   useEffect(() => {
+    // Update streak on component mount to ensure it's always current
+    updateStreak();
+    
     // Get user progress
     const progress = getUserProgress();
     
-    // Update streak if needed (checking if we have new check-ins)
+    // Check for today's check-in
     const today = new Date().toISOString().split('T')[0];
     const hasTodayCheckIn = progress.checkIns.some(
       checkIn => checkIn.date.split('T')[0] === today
     );
-    
-    if (!hasTodayCheckIn) {
-      updateStreak();
-    }
   }, []);
   
   const { milestones } = getUserProgress();

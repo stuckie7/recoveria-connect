@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, Calendar } from 'lucide-react';
-import { getUserProgress } from '@/utils/storage';
-import { daysBetween, getNextMilestoneDate, getMilestoneDescription } from '@/utils/dates';
+import { getUserProgress, updateStreak } from '@/utils/storage';
+import { daysBetween, getNextMilestoneDate, getMilestoneDescription, MILESTONE_DAYS } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 
 const SobrietyCounter: React.FC = () => {
@@ -13,7 +13,8 @@ const SobrietyCounter: React.FC = () => {
   const [nextMilestone, setNextMilestone] = useState<{ days: number; date: Date; } | null>(null);
   
   useEffect(() => {
-    // Get user progress from local storage
+    // Get user progress from local storage and ensure streak is updated
+    updateStreak();
     const progress = getUserProgress();
     const start = new Date(progress.startDate);
     setStartDate(start);
@@ -49,11 +50,8 @@ const SobrietyCounter: React.FC = () => {
     const minutesThisHour = totalMinutes % 60;
     setMinutes(minutesThisHour);
     
-    // Common milestones in days - matching the ones in utils/dates.ts
-    const milestones = [1, 7, 30, 60, 90, 180, 365, 730, 1095];
-    
     // Find the next milestone
-    const nextMilestoneDay = milestones.find(days => days > totalDays) || (totalDays + 30);
+    const nextMilestoneDay = MILESTONE_DAYS.find(days => days > totalDays) || (totalDays + 30);
     
     // Calculate the date for this milestone
     const nextMilestoneObj = {

@@ -10,9 +10,27 @@ export function useSobrietyDate() {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(progress.startDate));
   
-  // Update progress when it changes
+  // Update progress when it changes and calculate current streak
   useEffect(() => {
     const updatedProgress = getUserProgress();
+    
+    // Calculate the current streak based on days between start date and today
+    const startDate = new Date(updatedProgress.startDate);
+    const currentStreak = daysBetween(startDate);
+    
+    // Update the current streak in the progress object
+    if (updatedProgress.currentStreak !== currentStreak) {
+      updatedProgress.currentStreak = currentStreak;
+      
+      // Update longest streak if needed
+      if (currentStreak > updatedProgress.longestStreak) {
+        updatedProgress.longestStreak = currentStreak;
+      }
+      
+      // Save the updated progress
+      localStorage.setItem('recovery-app-progress', JSON.stringify(updatedProgress));
+    }
+    
     setProgress(updatedProgress);
   }, []);
   
@@ -42,8 +60,17 @@ export function useSobrietyDate() {
     
     // Update the local progress state with the newly saved data
     const updatedProgress = getUserProgress();
-    setProgress(updatedProgress);
     
+    // Calculate and update the current streak
+    const currentStreak = daysBetween(normalizedDate);
+    updatedProgress.currentStreak = currentStreak;
+    
+    // Update longest streak if needed
+    if (currentStreak > updatedProgress.longestStreak) {
+      updatedProgress.longestStreak = currentStreak;
+    }
+    
+    setProgress(updatedProgress);
     setIsDatePickerOpen(false);
     
     toast.success('Sobriety date updated', {
