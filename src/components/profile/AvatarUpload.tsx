@@ -4,7 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, Camera } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 import { useAvatar } from '@/hooks/useAvatar';
 import ImageCropper from './ImageCropper';
 
@@ -34,6 +33,14 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     uploadAvatar
   } = useAvatar(user, onAvatarUpdate);
   
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  
+  const triggerFileInput = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
+  };
+  
   return (
     <div className="flex flex-col items-center">
       <div className="relative group">
@@ -50,11 +57,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <label 
           htmlFor="avatar-upload" 
           className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          onClick={triggerFileInput}
         >
           <Camera size={20} className="text-white" />
         </label>
         
         <input
+          ref={inputRef}
           id="avatar-upload"
           type="file"
           accept="image/*"
@@ -71,18 +80,17 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         </div>
       )}
       
-      <label htmlFor="avatar-upload" className="mt-2">
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm" 
-          className="text-xs"
-          disabled={uploading}
-        >
-          <Upload size={14} className="mr-1" />
-          {avatarUrl ? 'Change Picture' : 'Upload Picture'}
-        </Button>
-      </label>
+      <Button 
+        type="button" 
+        variant="outline" 
+        size="sm" 
+        className="text-xs mt-2"
+        disabled={uploading}
+        onClick={triggerFileInput}
+      >
+        <Upload size={14} className="mr-1" />
+        {avatarUrl ? 'Change Picture' : 'Upload Picture'}
+      </Button>
 
       {showCropDialog && previewUrl && (
         <ImageCropper
