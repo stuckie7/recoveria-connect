@@ -43,10 +43,11 @@ export const analyzeUnusedStrategies = (
   if (relevantResources.length > 0) {
     recommendations.push({
       id: 'strategy-' + randomUnusedStrategy.id,
-      type: 'strategy',
-      resources: relevantResources.map(r => r.id),
+      type: 'strategies',
+      resourceIds: relevantResources.map(r => r.id),
       reason: `You haven't tried the "${randomUnusedStrategy.name}" coping strategy yet. These resources can help you learn about it.`,
-      priority: 6
+      priority: 6,
+      createdAt: new Date().toISOString()
     });
   }
   

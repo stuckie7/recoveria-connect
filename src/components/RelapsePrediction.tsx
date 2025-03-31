@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { getUserProgress } from '@/utils/storage';
 import { getResources } from '@/utils/storage/resources';
 import { predictRelapseRisk, PredictionResult } from '@/utils/storage/recommendations/relapsePrediction';
-import { AlertTriangle, ArrowRight, Info, Shield } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
