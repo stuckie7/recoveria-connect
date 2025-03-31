@@ -19,44 +19,45 @@ const Auth = () => {
         if (session?.user) {
           setUser(session.user);
           
+          // First navigate, then set up user data in the background
+          navigate('/welcome');
+          
           // Ensure the user has a profile and presence record
           const setupUserData = async () => {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('id', session.user.id)
-              .single();
-              
-            if (profileError) {
-              // Profile doesn't exist, create one
-              try {
+            try {
+              // First ensure profile exists
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', session.user.id)
+                .single();
+                
+              if (profileError) {
+                // Profile doesn't exist, create one
                 await supabase.from('profiles').insert({
                   id: session.user.id,
                   email: session.user.email,
                 });
-              } catch (err) {
-                console.error('Error creating profile:', err);
+                
+                // Add a small delay before creating presence record
+                // to ensure profile is fully created first
+                await new Promise(resolve => setTimeout(resolve, 500));
               }
-            }
-            
-            // Now try to ensure presence record
-            try {
+              
+              // Now try to ensure presence record
               await supabase.from('user_presence').upsert({
                 id: session.user.id,
                 is_online: true,
                 last_seen: new Date().toISOString()
               });
-            } catch (presenceError) {
-              console.error('Error updating user presence on login:', presenceError);
+              
+            } catch (err) {
+              console.error("Error setting up user data:", err);
+              // Don't show error to user since they've already been navigated away
             }
           };
           
-          setupUserData().then(() => {
-            navigate('/welcome');
-          }).catch(err => {
-            console.error("Error setting up user data:", err);
-            navigate('/welcome'); // Still navigate even if data setup fails
-          });
+          setupUserData();
         } else {
           setLoading(false);
         }

@@ -40,35 +40,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // If a user is found, let's also check if they have a profile
           if (session.user) {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('id', session.user.id)
-              .single();
-              
-            // If there's no profile, we need to create one
-            if (profileError) {
+            setTimeout(async () => {
               try {
-                // Create a basic profile
-                await supabase.from('profiles').insert({
-                  id: session.user.id,
-                  email: session.user.email,
-                });
-              } catch (insertError) {
-                console.error('Error creating user profile:', insertError);
+                const { error: profileError } = await supabase
+                  .from('profiles')
+                  .select('id')
+                  .eq('id', session.user.id)
+                  .single();
+                  
+                // If there's no profile, we need to create one
+                if (profileError) {
+                  try {
+                    // Create a basic profile
+                    await supabase.from('profiles').insert({
+                      id: session.user.id,
+                      email: session.user.email,
+                    });
+                    
+                    // Add a small delay to ensure profile is created
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                  } catch (insertError) {
+                    console.error('Error creating user profile:', insertError);
+                  }
+                }
+                
+                // Try to also ensure user presence record exists
+                try {
+                  await supabase.from('user_presence').upsert({
+                    id: session.user.id,
+                    is_online: true,
+                    last_seen: new Date().toISOString()
+                  });
+                } catch (presenceError) {
+                  console.error('Error updating user presence:', presenceError);
+                }
+              } catch (error) {
+                console.error('Error checking profile:', error);
               }
-            }
-            
-            // Try to also ensure user presence record exists
-            try {
-              await supabase.from('user_presence').upsert({
-                id: session.user.id,
-                is_online: true,
-                last_seen: new Date().toISOString()
-              });
-            } catch (presenceError) {
-              console.error('Error updating user presence:', presenceError);
-            }
+            }, 0); // Using setTimeout to avoid blocking the auth state change
           }
         }
       } catch (error) {

@@ -32,7 +32,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
     setLoading(true);
     
     try {
-      // Attempt to sign in directly - we'll handle profile creation if needed
+      // First ensure user profile exists to prevent foreign key constraint errors
+      const { data: existingUser, error: userCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+        
+      // Attempt to sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -53,10 +60,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
             variant: "destructive",
           });
         } else if (error.message.includes('Database error')) {
-          // Handle the specific database error we're seeing
           toast({
-            title: "Authentication Error",
-            description: "We're experiencing issues with our authentication system. Please try again later or contact support.",
+            title: "System Error",
+            description: "We're experiencing technical difficulties. Please try again later.",
             variant: "destructive",
           });
           console.error("Database error during authentication:", error.message);
