@@ -7,6 +7,7 @@ import { analyzeFrequentTriggers } from './triggerAnalyzer';
 import { analyzeUnusedStrategies } from './strategyAnalyzer';
 import { addGeneralRecommendations } from './generalAnalyzer';
 import { generateEducationalContent } from './educationAnalyzer';
+import { predictRelapseRisk } from './relapsePrediction';
 
 /**
  * Analyze user data and generate personalized recommendations
@@ -24,6 +25,17 @@ export const generateRecommendations = (resources: Resource[]): Recommendation[]
     ...analyzeUnusedStrategies(progress.checkIns, strategies, resources),
     ...generateEducationalContent(progress, resources) // Add educational content based on user journey
   ];
+  
+  // Add relapse prediction recommendations if there's enough data
+  if (progress.checkIns.length >= 3) {
+    const prediction = predictRelapseRisk(progress, resources);
+    if (prediction.riskLevel !== 'low') {
+      recommendations = [
+        ...recommendations,
+        ...prediction.recommendations
+      ];
+    }
+  }
   
   // Add general recommendations for new users or users with limited data
   if (progress.checkIns.length < 5 || recommendations.length < 2) {
