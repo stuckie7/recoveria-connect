@@ -1,50 +1,18 @@
 
-import React, { useEffect, useState } from 'react';
-import { getUserProgress } from '@/utils/storage';
-import { getResources } from '@/utils/storage/resources';
-import { predictRelapseRisk, PredictionResult } from '@/utils/storage/recommendations/relapsePrediction';
-import { AlertTriangle, ArrowRight, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { getResourcesByIds } from '@/utils/storage/recommendations/types';
-import ResourceCard from './resources/ResourceCard';
+import { usePrediction } from '@/hooks/usePrediction';
+import RiskDisplay from './prediction/RiskDisplay';
+import FactorsDisplay from './prediction/FactorsDisplay';
+import PredictionResources from './prediction/PredictionResources';
+import PredictionActions from './prediction/PredictionActions';
 
 const RelapsePrediction: React.FC = () => {
-  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const calculatePrediction = () => {
-      try {
-        setIsLoading(true);
-        const progress = getUserProgress();
-        const resources = getResources();
-        
-        // Only generate prediction if there's enough data
-        if (progress.checkIns.length >= 3) {
-          const result = predictRelapseRisk(progress, resources);
-          setPrediction(result);
-        } else {
-          setPrediction(null);
-        }
-      } catch (error) {
-        console.error('Error calculating relapse prediction:', error);
-        setPrediction(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    calculatePrediction();
-    
-    // Recalculate whenever the component mounts
-    const timer = setInterval(calculatePrediction, 24 * 60 * 60 * 1000); // Refresh daily
-    
-    return () => clearInterval(timer);
-  }, []);
+  const { prediction, isLoading } = usePrediction();
   
   if (isLoading) {
     return (
@@ -95,23 +63,6 @@ const RelapsePrediction: React.FC = () => {
     }
   };
   
-  const getProgressColor = (level: string): string => {
-    switch (level) {
-      case 'low': return 'bg-green-500';
-      case 'moderate': return 'bg-yellow-500';
-      case 'high': return 'bg-orange-500';
-      case 'critical': return 'bg-red-500';
-      default: return 'bg-muted-foreground';
-    }
-  };
-  
-  // Get resources for recommendations
-  const resources = getResources();
-  const recommendedResources = prediction.recommendations
-    .filter(rec => rec.resourceIds && rec.resourceIds.length > 0)
-    .slice(0, 2)
-    .flatMap(rec => getResourcesByIds(rec.resourceIds, resources));
-  
   return (
     <Card className="w-full bg-background/60 backdrop-blur">
       <CardHeader className="pb-2">
@@ -134,52 +85,19 @@ const RelapsePrediction: React.FC = () => {
       </CardHeader>
       
       <CardContent className="pb-2">
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-1">
-            <span>Risk Level</span>
-            <span>{prediction.riskScore}%</span>
-          </div>
-          <Progress 
-            value={prediction.riskScore} 
-            className="h-2" 
-            indicatorClassName={getProgressColor(prediction.riskLevel)} 
-          />
-        </div>
+        <RiskDisplay 
+          riskLevel={prediction.riskLevel} 
+          riskScore={prediction.riskScore} 
+        />
         
-        {prediction.primaryFactors.length > 0 && (
-          <div className="mb-3">
-            <p className="text-sm font-medium mb-1">Contributing Factors:</p>
-            <ul className="text-sm text-muted-foreground">
-              {prediction.primaryFactors.map((factor, index) => (
-                <li key={index} className="flex items-center">
-                  <span className="mr-2">•</span>
-                  {factor}
-                </li>
-              ))}
-            </ul>
-          </div>
+        <FactorsDisplay factors={prediction.primaryFactors} />
+        
+        {showDetails && (
+          <>
+            <PredictionResources recommendations={prediction.recommendations} />
+            <PredictionActions recommendations={prediction.recommendations} />
+          </>
         )}
-        
-        {showDetails && recommendedResources.length > 0 && (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm font-medium">Recommended Resources:</p>
-            <div className="space-y-3">
-              {recommendedResources.map(resource => (
-                <ResourceCard key={resource.id} resource={resource} compact />
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {showDetails && prediction.recommendations
-          .filter(rec => rec.action)
-          .slice(0, 2)
-          .map((rec, index) => (
-            <div key={index} className="mt-2 p-3 bg-primary/10 rounded-md">
-              <p className="text-sm">{rec.action}</p>
-            </div>
-          ))
-        }
       </CardContent>
       
       <CardFooter>
