@@ -19,23 +19,54 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
+      // First check if the user profile exists
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+      
+      // Attempt to sign in
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        // If there's an error, show appropriate message
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your email to confirm your account",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login failed",
+            description: error.message || "Invalid login credentials",
+            variant: "destructive",
+          });
+        }
+        throw error;
+      }
       
-      // Successfully signed in and will be redirected by the auth listener
+      // Successfully signed in - will be redirected by the auth listener
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid login credentials",
-        variant: "destructive",
-      });
+      console.error('Login error:', error);
+      // Error already handled in the try block
     } finally {
       setLoading(false);
     }
@@ -87,6 +118,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
         disabled={loading}
       >
         {loading ? "Logging in..." : "Login"}
+        {!loading && <LogIn className="ml-2 h-4 w-4" />}
       </Button>
     </form>
   );
