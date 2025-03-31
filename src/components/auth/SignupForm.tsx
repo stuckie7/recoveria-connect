@@ -19,12 +19,53 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Invalid password",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signUp({
+      // Check if email is already in use
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+        
+      if (existingUser) {
+        toast({
+          title: "Email already in use",
+          description: "This email address is already registered",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            email: email,
+          }
+        }
       });
       
       if (error) throw error;
@@ -34,8 +75,9 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
         description: "Check your email for the confirmation link.",
       });
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
-        title: "Error",
+        title: "Sign up failed",
         description: error.message || "An error occurred during sign up",
         variant: "destructive",
       });
@@ -94,6 +136,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
         disabled={loading}
       >
         {loading ? "Creating account..." : "Create Account"}
+        {!loading && <UserPlus className="ml-2 h-4 w-4" />}
       </Button>
     </form>
   );

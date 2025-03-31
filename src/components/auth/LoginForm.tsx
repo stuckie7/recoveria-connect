@@ -32,13 +32,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
     setLoading(true);
     
     try {
-      // First check if the user exists in profiles table
-      const { data: existingProfile, error: profileCheckError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-        
       // Attempt to sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

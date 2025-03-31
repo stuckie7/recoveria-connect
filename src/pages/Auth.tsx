@@ -16,54 +16,16 @@ const Auth = () => {
     // Set up auth listener first
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session?.user) {
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('Auth state change: SIGNED_IN', session.user.id);
           setUser(session.user);
           
-          // First navigate, then set up user data in the background
+          // First navigate, then set up user data asynchronously
           navigate('/welcome');
-          
-          // Ensure the user has a profile and presence record
-          const setupUserData = async () => {
-            try {
-              // First ensure profile exists
-              const { error: profileError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', session.user.id)
-                .single();
-                
-              if (profileError) {
-                // Profile doesn't exist, create one
-                await supabase.from('profiles').insert({
-                  id: session.user.id,
-                  email: session.user.email,
-                });
-                
-                // Add a small delay before creating presence record
-                // to ensure profile is fully created first
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
-              
-              // Now try to ensure presence record with a safety delay
-              setTimeout(async () => {
-                try {
-                  await supabase.from('user_presence').upsert({
-                    id: session.user.id,
-                    is_online: true,
-                    last_seen: new Date().toISOString()
-                  });
-                } catch (presenceErr) {
-                  console.error("Error updating presence:", presenceErr);
-                }
-              }, 1000);
-              
-            } catch (err) {
-              console.error("Error setting up user data:", err);
-              // Don't show error to user since they've already been navigated away
-            }
-          };
-          
-          setupUserData();
+        } else if (event === 'SIGNED_OUT') {
+          console.log('Auth state change: SIGNED_OUT');
+          setUser(null);
+          setLoading(false);
         } else {
           setLoading(false);
         }
@@ -84,9 +46,11 @@ const Auth = () => {
       }
       
       if (session?.user) {
+        console.log('Initial session check: User found', session.user.id);
         setUser(session.user);
         navigate('/welcome');
       } else {
+        console.log('Initial session check: No user found');
         setLoading(false);
       }
     });
