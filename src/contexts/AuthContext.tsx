@@ -31,9 +31,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // THEN check for existing session
     const getInitialSession = async () => {
       try {
+        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
+        
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+          
+          // If a user is found, let's also check if they have a profile
+          if (session.user) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', session.user.id)
+              .single();
+              
+            // If there's no profile, we need to create one
+            if (profileError) {
+              try {
+                // Create a basic profile
+                await supabase.from('profiles').insert({
+                  id: session.user.id,
+                  email: session.user.email,
+                });
+              } catch (insertError) {
+                console.error('Error creating user profile:', insertError);
+              }
+            }
+            
+            // Try to also ensure user presence record exists
+            try {
+              await supabase.from('user_presence').upsert({
+                id: session.user.id,
+                is_online: true,
+                last_seen: new Date().toISOString()
+              });
+            } catch (presenceError) {
+              console.error('Error updating user presence:', presenceError);
+            }
+          }
+        }
       } catch (error) {
         console.error('Error getting initial session:', error);
         toast({
@@ -56,6 +93,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
+      // If there's a user, update their online status
+      if (user) {
+        try {
+          await supabase
+            .from('user_presence')
+            .update({ is_online: false })
+            .eq('id', user.id);
+        } catch (presenceError) {
+          console.error('Error updating user presence during sign out:', presenceError);
+        }
+      }
+      
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);

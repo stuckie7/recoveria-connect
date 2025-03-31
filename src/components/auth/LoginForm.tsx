@@ -32,15 +32,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
     setLoading(true);
     
     try {
-      // First check if the user profile exists
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-      
-      // Attempt to sign in
-      const { error } = await supabase.auth.signInWithPassword({
+      // Attempt to sign in directly - we'll handle profile creation if needed
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -53,10 +46,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
             description: "Please check your email to confirm your account",
             variant: "destructive",
           });
+        } else if (error.message.includes('Invalid login credentials')) {
+          toast({
+            title: "Invalid credentials",
+            description: "The email or password you entered is incorrect",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Database error')) {
+          // Handle the specific database error we're seeing
+          toast({
+            title: "Authentication Error",
+            description: "We're experiencing issues with our authentication system. Please try again later or contact support.",
+            variant: "destructive",
+          });
+          console.error("Database error during authentication:", error.message);
         } else {
           toast({
             title: "Login failed",
-            description: error.message || "Invalid login credentials",
+            description: error.message || "An error occurred during login",
             variant: "destructive",
           });
         }
@@ -64,6 +71,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
       }
       
       // Successfully signed in - will be redirected by the auth listener
+      if (data?.session) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       // Error already handled in the try block

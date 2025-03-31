@@ -13,11 +13,50 @@ const Auth = () => {
 
   // Check if user is already logged in
   useEffect(() => {
+    // Set up auth listener first
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
           setUser(session.user);
-          navigate('/welcome');
+          
+          // Ensure the user has a profile and presence record
+          const setupUserData = async () => {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (profileError) {
+              // Profile doesn't exist, create one
+              try {
+                await supabase.from('profiles').insert({
+                  id: session.user.id,
+                  email: session.user.email,
+                });
+              } catch (err) {
+                console.error('Error creating profile:', err);
+              }
+            }
+            
+            // Now try to ensure presence record
+            try {
+              await supabase.from('user_presence').upsert({
+                id: session.user.id,
+                is_online: true,
+                last_seen: new Date().toISOString()
+              });
+            } catch (presenceError) {
+              console.error('Error updating user presence on login:', presenceError);
+            }
+          };
+          
+          setupUserData().then(() => {
+            navigate('/welcome');
+          }).catch(err => {
+            console.error("Error setting up user data:", err);
+            navigate('/welcome'); // Still navigate even if data setup fails
+          });
         } else {
           setLoading(false);
         }
