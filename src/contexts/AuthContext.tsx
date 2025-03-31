@@ -40,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // If a user is found, let's also check if they have a profile
           if (session.user) {
+            // Use setTimeout to avoid blocking the auth state change
             setTimeout(async () => {
               try {
                 const { error: profileError } = await supabase
@@ -58,22 +59,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     });
                     
                     // Add a small delay to ensure profile is created
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                   } catch (insertError) {
                     console.error('Error creating user profile:', insertError);
                   }
                 }
                 
-                // Try to also ensure user presence record exists
-                try {
-                  await supabase.from('user_presence').upsert({
-                    id: session.user.id,
-                    is_online: true,
-                    last_seen: new Date().toISOString()
-                  });
-                } catch (presenceError) {
-                  console.error('Error updating user presence:', presenceError);
-                }
+                // Try to also ensure user presence record exists - with a delay
+                setTimeout(async () => {
+                  try {
+                    await supabase.from('user_presence').upsert({
+                      id: session.user.id,
+                      is_online: true,
+                      last_seen: new Date().toISOString()
+                    });
+                  } catch (presenceError) {
+                    console.error('Error updating user presence:', presenceError);
+                  }
+                }, 1000);
               } catch (error) {
                 console.error('Error checking profile:', error);
               }

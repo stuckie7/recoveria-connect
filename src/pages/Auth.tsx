@@ -41,15 +41,21 @@ const Auth = () => {
                 
                 // Add a small delay before creating presence record
                 // to ensure profile is fully created first
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
               }
               
-              // Now try to ensure presence record
-              await supabase.from('user_presence').upsert({
-                id: session.user.id,
-                is_online: true,
-                last_seen: new Date().toISOString()
-              });
+              // Now try to ensure presence record with a safety delay
+              setTimeout(async () => {
+                try {
+                  await supabase.from('user_presence').upsert({
+                    id: session.user.id,
+                    is_online: true,
+                    last_seen: new Date().toISOString()
+                  });
+                } catch (presenceErr) {
+                  console.error("Error updating presence:", presenceErr);
+                }
+              }, 1000);
               
             } catch (err) {
               console.error("Error setting up user data:", err);

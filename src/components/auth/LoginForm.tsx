@@ -32,8 +32,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
     setLoading(true);
     
     try {
-      // First ensure user profile exists to prevent foreign key constraint errors
-      const { data: existingUser, error: userCheckError } = await supabase
+      // First check if the user exists in profiles table
+      const { data: existingProfile, error: profileCheckError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
@@ -46,7 +46,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
       });
       
       if (error) {
-        // If there's an error, show appropriate message
         if (error.message.includes('Email not confirmed')) {
           toast({
             title: "Email not confirmed",
@@ -61,8 +60,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
           });
         } else if (error.message.includes('Database error')) {
           toast({
-            title: "System Error",
-            description: "We're experiencing technical difficulties. Please try again later.",
+            title: "Authentication Error",
+            description: "We're experiencing technical difficulties. Please try again in a few moments.",
             variant: "destructive",
           });
           console.error("Database error during authentication:", error.message);
