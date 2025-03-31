@@ -7,7 +7,7 @@ import { analyzeFrequentTriggers } from './triggerAnalyzer';
 import { analyzeUnusedStrategies } from './strategyAnalyzer';
 import { addGeneralRecommendations } from './generalAnalyzer';
 import { generateEducationalContent } from './educationAnalyzer';
-import { predictRelapseRisk } from './relapsePrediction';
+import { predictRelapseRisk } from './prediction';
 
 /**
  * Analyze user data and generate personalized recommendations

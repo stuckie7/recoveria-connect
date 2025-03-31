@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { getUserProgress } from '@/utils/storage';
 import { getResources } from '@/utils/storage/resources';
-import { predictRelapseRisk, PredictionResult } from '@/utils/storage/recommendations/relapsePrediction';
+import { predictRelapseRisk, PredictionResult } from '@/utils/storage/recommendations/prediction';
 
 export function usePrediction() {
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
