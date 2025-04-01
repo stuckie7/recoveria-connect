@@ -14,6 +14,7 @@ if (!SUPABASE_URL || SUPABASE_URL.trim() === '') {
   throw new Error('Supabase URL is required. Please check your environment variables.');
 }
 
+// Create and export the Supabase client
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     persistSession: true,

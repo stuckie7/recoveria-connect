@@ -19,14 +19,34 @@ export const useUserPresence = () => {
     
     try {
       const result = await performWithRetry(async () => {
-        // First check if user exists in auth.users to avoid foreign key constraint errors
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+        // First check if user exists in profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
         
-        if (userError || !userData.user) {
-          console.error('User does not exist or cannot be verified:', userError);
-          return false;
+        // If profile doesn't exist yet, create it first
+        if (!profileData) {
+          console.log('Profile not found for user, creating one:', userId);
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !userData.user) {
+            console.error('Could not get current user:', userError);
+            return false;
+          }
+          
+          const { error: createProfileError } = await supabase
+            .from('profiles')
+            .insert({ id: userId, email: userData.user.email });
+          
+          if (createProfileError) {
+            console.error('Error creating profile:', createProfileError);
+            return false;
+          }
         }
         
+        // Now update the presence
         const { error: presenceError } = await supabase.from('user_presence').upsert({
           id: userId,
           is_online: isOnline,

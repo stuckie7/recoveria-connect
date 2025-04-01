@@ -39,12 +39,10 @@ export const SignupForm: React.FC<SignupFormProps> = ({ loading, setLoading }) =
     setLoading(true);
     
     try {
-      // Remove the manual profile check - rely on Supabase's built-in constraints
-      
+      // Create the user in auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        // Remove redundant options
       });
       
       if (error) {
@@ -61,7 +59,25 @@ export const SignupForm: React.FC<SignupFormProps> = ({ loading, setLoading }) =
             variant: "destructive",
           });
         }
+        setLoading(false);
         return;
+      }
+      
+      // Explicitly create profile for the user to ensure it exists before presence record
+      if (data.user) {
+        try {
+          const { error: profileError } = await supabase.from('profiles').insert({
+            id: data.user.id,
+            email: data.user.email
+          });
+          
+          if (profileError) {
+            console.error('Error creating profile during signup:', profileError);
+          }
+        } catch (profileError) {
+          console.error('Failed to create profile during signup:', profileError);
+          // Continue signup flow despite profile creation errors
+        }
       }
       
       toast({

@@ -30,39 +30,64 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // First check if the user has a profile
+      const { data: userData, error: userError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) {
-        if (error.message.includes('Email not confirmed')) {
+      if (userError) {
+        if (userError.message.includes('Email not confirmed')) {
           toast({
             title: "Email not confirmed",
             description: "Please check your email to confirm your account",
             variant: "destructive",
           });
-        } else if (error.message.includes('Invalid login credentials')) {
+        } else if (userError.message.includes('Invalid login credentials')) {
           toast({
             title: "Invalid credentials",
             description: "The email or password you entered is incorrect",
             variant: "destructive",
           });
-        } else if (error.message.includes('Database error')) {
+        } else if (userError.message.includes('Database error')) {
           toast({
             title: "Authentication Error",
             description: "We're experiencing technical difficulties. Please try again in a few moments.",
             variant: "destructive",
           });
-          console.error("Database error during authentication:", error.message);
+          console.error("Database error during authentication:", userError.message);
         } else {
           toast({
             title: "Login failed",
-            description: error.message || "An error occurred during login",
+            description: userError.message || "An error occurred during login",
             variant: "destructive",
           });
         }
+        setLoading(false);
         return;
+      }
+      
+      if (userData.user) {
+        try {
+          // Ensure the user has a profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userData.user.id)
+            .maybeSingle();
+            
+          // Create profile if it doesn't exist
+          if (!profile) {
+            console.log('Creating profile for user after login:', userData.user.id);
+            await supabase.from('profiles').insert({
+              id: userData.user.id,
+              email: userData.user.email
+            });
+          }
+        } catch (profileError) {
+          console.error('Error ensuring user profile exists:', profileError);
+          // Continue login flow despite profile error
+        }
       }
       
       // If we get here, login was successful
