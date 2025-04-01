@@ -399,16 +399,19 @@ export type Database = {
       }
       user_presence: {
         Row: {
+          created_at: string | null
           id: string
           is_online: boolean
           last_seen: string
         }
         Insert: {
+          created_at?: string | null
           id: string
           is_online?: boolean
           last_seen?: string
         }
         Update: {
+          created_at?: string | null
           id?: string
           is_online?: boolean
           last_seen?: string
