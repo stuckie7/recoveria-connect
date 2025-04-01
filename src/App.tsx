@@ -35,25 +35,29 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Navbar />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/welcome" element={<WelcomePage />} />
-              <Route path="/404" element={<NotFound />} />
-              
-              {/* Protected routes */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/journal" element={<Journal />} />
-              </Route>
-              
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
-            <EmergencySupport />
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/welcome" element={<WelcomePage />} />
+                  <Route path="/404" element={<NotFound />} />
+                  
+                  {/* Protected routes */}
+                  <Route element={<PrivateRoute />}>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/community" element={<Community />} />
+                    <Route path="/resources" element={<Resources />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/journal" element={<Journal />} />
+                  </Route>
+                  
+                  <Route path="*" element={<Navigate to="/404" replace />} />
+                </Routes>
+              </main>
+              <EmergencySupport />
+            </div>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Users, Bookmark, User, Menu, X, LogOut, Flame, ArrowUp, Book } from 'lucide-react';
@@ -20,8 +21,13 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  // If auth is still loading, don't render the navbar yet
+  if (loading) {
+    return null;
+  }
 
   useEffect(() => {
     if (user) {
