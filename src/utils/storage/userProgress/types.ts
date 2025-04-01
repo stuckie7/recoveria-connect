@@ -1,4 +1,3 @@
-
 import { UserProgress } from '@/types';
 import { STORAGE_KEYS } from '../constants';
 

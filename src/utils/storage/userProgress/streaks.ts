@@ -4,7 +4,7 @@
  */
 
 import { daysBetween } from '../../dates';
-import { getUserProgress, saveUserProgress } from '../types';
+import { getUserProgress, saveUserProgress } from './types';
 
 /**
  * Update streak count

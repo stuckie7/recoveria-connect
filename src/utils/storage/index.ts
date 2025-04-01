@@ -5,11 +5,7 @@
 
 // Re-export all storage utilities
 export * from './constants';
-export * from './userProgress/types';  // Export directly from types.ts to avoid circular dependencies
-export * from './userProgress/initialize';
-export * from './userProgress/streaks';
-export * from './userProgress/milestones';
-export * from './userProgress/checkIns';
+export * from './userProgress/index';  // Updated to use the index file
 export * from './triggers';
 export * from './strategies';
 export * from './resources';

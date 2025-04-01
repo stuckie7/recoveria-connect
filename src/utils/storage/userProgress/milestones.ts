@@ -5,7 +5,7 @@
 
 import { Milestone } from '@/types';
 import { generateMilestoneName, getMilestoneIcon } from '../../dates';
-import { getUserProgress, saveUserProgress } from '../types';
+import { getUserProgress, saveUserProgress } from './types';
 
 /**
  * Mark a milestone as achieved
