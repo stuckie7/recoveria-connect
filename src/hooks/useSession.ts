@@ -71,15 +71,23 @@ export const useSession = () => {
     // Extracted session handling logic
     const handleUserSession = async (session: Session) => {
       try {
-        await userProfileService.ensureUserProfile(session.user);
-        await setUserOnline(session.user);
+        // Try to ensure user profile, but continue even if it fails
+        try {
+          await userProfileService.ensureUserProfile(session.user);
+        } catch (profileError) {
+          console.error('Profile setup error, continuing auth flow:', profileError);
+        }
+        
+        // Try to update presence, but don't block auth flow if it fails
+        try {
+          await setUserOnline(session.user);
+        } catch (presenceError) {
+          console.error('Presence update error, continuing auth flow:', presenceError);
+        }
       } catch (error) {
-        console.error('Error in profile management:', error);
-        toast({
-          title: "Profile Error",
-          description: "There was a problem with your profile setup.",
-          variant: "destructive",
-        });
+        console.error('Error in session handling:', error);
+        // Don't show a toast here to avoid disrupting the user experience
+        // for non-critical functionality
       } finally {
         setLoading(false);
       }
