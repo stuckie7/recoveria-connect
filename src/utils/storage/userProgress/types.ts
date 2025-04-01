@@ -1,31 +1,30 @@
-
-import { UserProgress, CheckIn, Milestone } from '@/types';
-import { STORAGE_KEYS } from '../constants';
-
-// Re-export the storage keys for use in the user progress modules
-export { STORAGE_KEYS };
-
-/**
- * Get user progress from local storage or initialize if not exists
- */
-export const getUserProgress = (): UserProgress => {
-  const progressString = localStorage.getItem(STORAGE_KEYS.USER_PROGRESS);
-  
-  if (!progressString) {
-    const initialProgress = initializeUserProgress();
-    saveUserProgress(initialProgress);
-    return initialProgress;
+// Add this to your Database interface in types.ts
+user_presence: {
+  Row: {
+    id: string
+    is_online: boolean
+    last_seen: string
+    created_at: string
   }
-  
-  return JSON.parse(progressString);
-};
-
-/**
- * Save user progress to local storage
- */
-export const saveUserProgress = (progress: UserProgress): void => {
-  localStorage.setItem(STORAGE_KEYS.USER_PROGRESS, JSON.stringify(progress));
-};
-
-// Import the initialization function to avoid circular dependency issues
-import { initializeUserProgress } from './initialize';
+  Insert: {
+    id: string
+    is_online?: boolean
+    last_seen?: string
+    created_at?: string
+  }
+  Update: {
+    id?: string
+    is_online?: boolean
+    last_seen?: string
+    created_at?: string
+  }
+  Relationships: [
+    {
+      foreignKeyName: "user_presence_id_fkey"
+      columns: ["id"]
+      isOneToOne: true
+      referencedRelation: "users"
+      referencedColumns: ["id"]
+    }
+  ]
+}
