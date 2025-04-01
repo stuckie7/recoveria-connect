@@ -4,7 +4,7 @@
  */
 
 import { CheckIn } from '@/types';
-import { getUserProgress, saveUserProgress } from './types';
+import { getUserProgress, saveUserProgress } from '../types';
 
 /**
  * Add a new check-in

@@ -62,7 +62,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
             variant: "destructive",
           });
         }
-        return; // This is fine inside the function
+        return;
       }
       
       // If we get here, login was successful
