@@ -38,21 +38,34 @@ export const ensureUserProfile = async (userId: string, email?: string | null): 
     if (!profileData) {
       console.log('Profile not found, creating one for user:', userId);
       
-      const { error: createError } = await supabase
-        .from('profiles')
-        .insert({ 
-          id: userId, 
-          email: email || undefined
-        });
+      // Create the profile with retry mechanism
+      let retries = 3;
+      let profileCreated = false;
       
-      if (createError) {
-        console.error('Error creating profile:', createError);
+      while (retries > 0 && !profileCreated) {
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: userId, 
+            email: email || undefined
+          });
+        
+        if (createError) {
+          console.error(`Error creating profile (attempt ${4-retries}):`, createError);
+          retries--;
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          profileCreated = true;
+        }
+      }
+      
+      if (!profileCreated) {
         return false;
       }
       
       // Wait a moment for the profile creation to be processed
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return true;
+      await new Promise(resolve => setTimeout(resolve, 800));
     }
     
     return true;

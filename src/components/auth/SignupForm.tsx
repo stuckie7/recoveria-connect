@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase, ensureUserProfile } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -63,12 +64,29 @@ export const SignupForm: React.FC<SignupFormProps> = ({ loading, setLoading }) =
       }
       
       // Explicitly create profile for the user to ensure it exists
+      let profileSuccess = false;
       if (data?.user) {
         try {
-          // Wait a moment before trying to create the profile
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait a longer time before trying to create the profile
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          await ensureUserProfile(data.user.id, data.user.email);
+          // Retry profile creation multiple times if necessary
+          for (let i = 0; i < 3; i++) {
+            try {
+              profileSuccess = await ensureUserProfile(data.user.id, data.user.email);
+              if (profileSuccess) break;
+              
+              // Wait between retries
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (err) {
+              console.error(`Profile creation attempt ${i+1} failed:`, err);
+              // Continue with retries
+            }
+          }
+          
+          if (!profileSuccess) {
+            console.warn("Failed to create profile after multiple attempts");
+          }
         } catch (profileError) {
           console.error('Failed to create profile during signup:', profileError);
           // Continue signup flow despite profile creation errors

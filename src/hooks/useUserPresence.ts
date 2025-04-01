@@ -17,7 +17,7 @@ export const useUserPresence = () => {
     setUpdating(true);
     
     try {
-      // First ensure the profile exists
+      // First ensure the profile exists - CRITICAL for foreign key constraint
       const profileExists = await ensureUserProfile(userId);
       
       if (!profileExists) {
@@ -25,23 +25,39 @@ export const useUserPresence = () => {
         return false;
       }
       
-      // Important: Add a small delay to ensure the profile has been created in the database
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Important: Add a delay to ensure the profile has been created in the database
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Now update the presence
-      const { error: presenceError } = await supabase.from('user_presence').upsert({
-        id: userId,
-        is_online: isOnline,
-        last_seen: new Date().toISOString()
-      });
+      // Retry the presence update if it fails initially
+      let success = false;
+      let attempts = 0;
+      const maxAttempts = 3;
       
-      if (presenceError) {
-        console.error("Error updating user presence:", presenceError);
-        return false;
+      while (!success && attempts < maxAttempts) {
+        attempts++;
+        
+        try {
+          const { error: presenceError } = await supabase.from('user_presence').upsert({
+            id: userId,
+            is_online: isOnline,
+            last_seen: new Date().toISOString()
+          });
+          
+          if (presenceError) {
+            console.error(`Error updating user presence (attempt ${attempts}):`, presenceError);
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+          } else {
+            console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
+            success = true;
+          }
+        } catch (e) {
+          console.error(`Failed attempt ${attempts} to update presence:`, e);
+          await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+        }
       }
       
-      console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
-      return true;
+      return success;
     } catch (error) {
       console.error(`Failed to update presence record:`, error);
       

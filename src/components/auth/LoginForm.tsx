@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase, ensureUserProfile } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -36,13 +37,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
       });
       
       if (userError) {
-        if (userError.message.includes('Email not confirmed')) {
-          toast({
-            title: "Email not confirmed",
-            description: "Please check your email to confirm your account",
-            variant: "destructive",
-          });
-        } else if (userError.message.includes('Invalid login credentials')) {
+        if (userError.message.includes('Invalid login credentials')) {
           toast({
             title: "Invalid credentials",
             description: "The email or password you entered is incorrect",
@@ -50,7 +45,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
           });
         } else if (userError.message.includes('Database error')) {
           toast({
-            title: "Authentication Error",
+            title: "Login Error",
             description: "We're experiencing technical difficulties. Please try again in a few moments.",
             variant: "destructive",
           });
@@ -66,10 +61,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
         return;
       }
       
-      // Step 2: If login successful, ensure profile exists
+      // Step 2: If login successful, wait briefly before the subsequent processing
       if (userData?.user) {
         try {
-          await ensureUserProfile(userData.user.id, userData.user.email);
+          // Wait briefly before profile operations
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Ensure profile exists before any other operations
+          const profileSuccess = await ensureUserProfile(userData.user.id, userData.user.email);
+          
+          if (!profileSuccess) {
+            // Continue login process despite profile issues
+            console.warn("Profile verification had issues but continuing auth flow");
+          }
           
           // If we get here, login was successful
           toast({
