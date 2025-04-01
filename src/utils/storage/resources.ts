@@ -6,4 +6,3 @@
  */
 
 export * from './recommendations';
-export * from './resources/index';

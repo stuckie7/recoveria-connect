@@ -1,10 +1,7 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { useAuthState } from '@/hooks/useAuthState';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from "@/components/ui/use-toast";
-import { performWithRetry } from '@/utils/retryUtil';
 
 type AuthContextType = {
   session: Session | null;
@@ -16,66 +13,57 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const authState = useAuthState();
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Add token refresh logic
   useEffect(() => {
-    // Check token validity periodically
-    const checkTokenInterval = setInterval(async () => {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        // Use retry mechanism for getting the session
-        const session = await performWithRetry(async () => {
-          const { data, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            throw error;
-          }
-          
-          return data.session;
-        });
-        
-        if (session) {
-          // If session exists but is about to expire (e.g., within 5 minutes)
-          const expiresAt = new Date((session.expires_at || 0) * 1000);
-          const now = new Date();
-          const fiveMinutes = 5 * 60 * 1000;
-          
-          if (expiresAt.getTime() - now.getTime() < fiveMinutes) {
-            console.log('Session about to expire, refreshing...');
-            
-            // Refresh the session with retry
-            const refreshResult = await performWithRetry(async () => {
-              const { data, error } = await supabase.auth.refreshSession();
-              
-              if (error) {
-                throw error;
-              }
-              
-              return data;
-            });
-            
-            if (refreshResult) {
-              console.log('Session successfully refreshed');
-            }
-          }
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
       } catch (error) {
-        console.error('Error in token refresh cycle:', error);
-        toast({
-          title: "Session Error",
-          description: "There was a problem with your session. Please sign in again.",
-          variant: "destructive",
-        });
+        console.error('Error getting initial session:', error);
+      } finally {
+        setLoading(false);
       }
-    }, 60000); // Check every minute
-    
+    };
+
+    getInitialSession();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
     return () => {
-      clearInterval(checkTokenInterval);
+      subscription.unsubscribe();
     };
   }, []);
 
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const value = {
+    session,
+    user,
+    signOut,
+    loading
+  };
+
   return (
-    <AuthContext.Provider value={authState}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

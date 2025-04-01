@@ -19,82 +19,27 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Missing fields",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast({
-        title: "Invalid password",
-        description: "Password must be at least 6 characters",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setLoading(true);
     
     try {
-      // Let Supabase handle email uniqueness constraints
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
       });
       
-      if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            title: "Email already in use",
-            description: "This email address is already registered",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('password')) {
-          toast({
-            title: "Password Error",
-            description: "Password doesn't meet requirements",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('email')) {
-          toast({
-            title: "Email Error",
-            description: "Please provide a valid email address",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sign up failed",
-            description: error.message || "An error occurred during sign up",
-            variant: "destructive",
-          });
-        }
-        console.error('Signup error:', error);
-        setLoading(false);
-        return;
-      }
+      if (error) throw error;
       
       toast({
         title: "Success!",
-        description: "Check your email for the confirmation link, or login if verification is disabled.",
+        description: "Check your email for the confirmation link.",
       });
-      
-      // Reset form
-      setEmail('');
-      setPassword('');
-      setLoading(false);
-      
     } catch (error: any) {
-      console.error('Signup error:', error);
       toast({
-        title: "Sign up failed",
-        description: error.message || "An unexpected error occurred during sign up",
+        title: "Error",
+        description: error.message || "An error occurred during sign up",
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };
@@ -149,7 +94,6 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
         disabled={loading}
       >
         {loading ? "Creating account..." : "Create Account"}
-        {!loading && <UserPlus className="ml-2 h-4 w-4" />}
       </Button>
     </form>
   );
