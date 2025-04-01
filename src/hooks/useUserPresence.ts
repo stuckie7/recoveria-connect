@@ -10,7 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 export const useUserPresence = () => {
   const [updating, setUpdating] = useState(false);
 
-  // Function to create/update presence record with retry logic
+  // Function to update presence record
   const updatePresence = async (userId: string, isOnline: boolean = true) => {
     if (!userId || updating) return;
     

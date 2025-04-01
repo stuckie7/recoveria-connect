@@ -17,32 +17,7 @@ export const useSession = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event);
-        
-        // Only update session/user state synchronously here
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // If a user is found and they just signed in, handle profile setup
-        if (session?.user) {
-          // Use setTimeout to avoid Supabase auth deadlocks
-          setTimeout(async () => {
-            try {
-              await userProfileService.ensureUserProfile(session.user);
-              await setUserOnline(session.user);
-            } catch (error) {
-              console.error('Error ensuring user profile:', error);
-              toast({
-                title: "Profile Error",
-                description: "There was a problem with your profile setup.",
-                variant: "destructive",
-              });
-            } finally {
-              setLoading(false);
-            }
-          }, 500);
-        } else {
-          setLoading(false);
-        }
+        handleSessionChange(session);
       }
     );
 
@@ -50,30 +25,7 @@ export const useSession = () => {
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Use setTimeout to avoid Supabase auth deadlocks
-          setTimeout(async () => {
-            try {
-              await userProfileService.ensureUserProfile(session.user);
-              await setUserOnline(session.user);
-            } catch (error) {
-              console.error('Error ensuring user profile:', error);
-              toast({
-                title: "Profile Error",
-                description: "There was a problem with your profile setup.",
-                variant: "destructive",
-              });
-            } finally {
-              setLoading(false);
-            }
-          }, 500);
-        } else {
-          setLoading(false);
-        }
+        await handleSessionChange(session);
       } catch (error) {
         console.error('Error getting initial session:', error);
         toast({
@@ -81,6 +33,30 @@ export const useSession = () => {
           description: "There was a problem retrieving your session. Please try again.",
           variant: "destructive",
         });
+        setLoading(false);
+      }
+    };
+
+    // Extracted session handling logic
+    const handleSessionChange = async (session: Session | null) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        try {
+          await userProfileService.ensureUserProfile(session.user);
+          await setUserOnline(session.user);
+        } catch (error) {
+          console.error('Error in profile management:', error);
+          toast({
+            title: "Profile Error",
+            description: "There was a problem with your profile setup.",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      } else {
         setLoading(false);
       }
     };
