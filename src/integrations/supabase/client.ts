@@ -9,6 +9,11 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJh
 // Log which values we're using
 console.log('Initializing Supabase client with URL:', SUPABASE_URL ? 'Valid URL' : 'Missing URL');
 
+// Ensure we have string values, not undefined or empty strings
+if (!SUPABASE_URL || SUPABASE_URL.trim() === '') {
+  throw new Error('Supabase URL is required. Please check your environment variables.');
+}
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     persistSession: true,

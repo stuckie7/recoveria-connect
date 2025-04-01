@@ -3,17 +3,16 @@
  * Milestone tracking utilities
  */
 
-import { Milestone } from '@/types';
 import { generateMilestoneName, getMilestoneIcon } from '../../dates';
 import { getUserProgress, saveUserProgress } from './types';
 
 /**
  * Mark a milestone as achieved
  */
-export const achieveMilestone = (milestoneId: string): void => {
+export const achieveMilestone = (milestoneId: string) => {
   const progress = getUserProgress();
+  const milestone = progress.milestones.find((m) => m.id === milestoneId);
   
-  const milestone = progress.milestones.find(m => m.id === milestoneId);
   if (milestone && !milestone.achieved) {
     milestone.achieved = true;
     milestone.date = new Date().toISOString();
@@ -25,9 +24,9 @@ export const achieveMilestone = (milestoneId: string): void => {
  * Generate monthly milestones based on days sober
  * This dynamically creates milestone entries for each month
  */
-export const generateMonthlyMilestones = (daysSober: number): Milestone[] => {
+export const generateMonthlyMilestones = (daysSober: number) => {
   const completedMonths = Math.floor(daysSober / 30);
-  const milestones: Milestone[] = [];
+  const milestones = [];
   
   if (daysSober >= 1) {
     milestones.push({

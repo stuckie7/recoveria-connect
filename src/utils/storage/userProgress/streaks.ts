@@ -9,11 +9,11 @@ import { getUserProgress, saveUserProgress } from './types';
 /**
  * Update streak count
  */
-export const updateStreak = (): void => {
+export const updateStreak = () => {
   const progress = getUserProgress();
   const startDate = new Date(progress.startDate);
-  
   const currentDays = daysBetween(startDate);
+  
   progress.currentStreak = currentDays;
   progress.totalDaysSober = currentDays;
   
@@ -23,7 +23,7 @@ export const updateStreak = (): void => {
   
   let milestonesUpdated = false;
   
-  progress.milestones.forEach(milestone => {
+  progress.milestones.forEach((milestone) => {
     if (!milestone.achieved && progress.currentStreak >= milestone.days) {
       milestone.achieved = true;
       milestone.date = new Date().toISOString();
