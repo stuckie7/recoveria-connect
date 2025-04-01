@@ -29,15 +29,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         // If a user is found and they just signed in, handle profile setup
-        if (event === 'SIGNED_IN' && session?.user) {
+        if (session?.user) {
           // Use setTimeout to avoid Supabase auth deadlocks
-          setTimeout(() => {
-            ensureUserProfile(session.user);
+          setTimeout(async () => {
+            try {
+              await ensureUserProfile(session.user);
+            } catch (error) {
+              console.error('Error ensuring user profile:', error);
+              toast({
+                title: "Profile Error",
+                description: "There was a problem with your profile setup.",
+                variant: "destructive",
+              });
+            } finally {
+              setLoading(false);
+            }
           }, 500);
-        }
-        
-        // Mark as not loading unless we're in sign-in
-        if (event !== 'SIGNED_IN') {
+        } else {
           setLoading(false);
         }
       }
@@ -53,8 +61,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           // Use setTimeout to avoid Supabase auth deadlocks
-          setTimeout(() => {
-            ensureUserProfile(session.user);
+          setTimeout(async () => {
+            try {
+              await ensureUserProfile(session.user);
+            } catch (error) {
+              console.error('Error ensuring user profile:', error);
+              toast({
+                title: "Profile Error",
+                description: "There was a problem with your profile setup.",
+                variant: "destructive",
+              });
+            } finally {
+              setLoading(false);
+            }
           }, 500);
         } else {
           setLoading(false);
@@ -87,36 +106,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', user.id)
         .maybeSingle();
       
-      // Create profile if it doesn't exist (now only checking !profile, not the error)
+      if (profileError) {
+        console.error('Error checking profile:', profileError);
+        throw profileError;
+      }
+      
+      // Create profile if it doesn't exist
       if (!profile) {
         console.log('Creating profile for user:', user.id);
-        try {
-          const { error: insertError } = await supabase.from('profiles').insert({
-            id: user.id,
-            email: user.email,
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+        });
+        
+        if (insertError) {
+          console.error('Error creating user profile:', insertError);
+          toast({
+            title: "Profile Creation Error",
+            description: "There was a problem creating your profile. Please try again or contact support.",
+            variant: "destructive",
           });
-          
-          if (insertError) {
-            console.error('Error creating user profile:', insertError);
-            toast({
-              title: "Profile Creation Error",
-              description: "There was a problem creating your profile. Please try again or contact support.",
-              variant: "destructive",
-            });
-            // Continue execution even if profile creation fails
-          } else {
-            console.log('Created user profile for:', user.id);
-          }
-        } catch (error) {
-          console.error('Error in profile creation:', error);
-          // We don't throw here as we want to continue with presence
+          throw insertError;
         }
+        
+        console.log('Created user profile for:', user.id);
       } else {
         console.log('Profile already exists for user:', user.id);
       }
       
       // Add some delay before updating presence
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Always update presence record
       try {
@@ -128,19 +147,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (presenceError) {
           console.error('Error updating user presence:', presenceError);
+          // Don't throw here, since presence is less critical than profile
         } else {
           console.log('Updated presence for user:', user.id);
         }
       } catch (error) {
         console.error('Exception updating presence:', error);
       }
-      
-      // Only mark loading as false when we're done with all operations
-      setLoading(false);
-      
     } catch (error) {
       console.error('Error in profile verification:', error);
-      setLoading(false);
+      throw error; // Re-throw to allow caller to handle
     }
   };
 
