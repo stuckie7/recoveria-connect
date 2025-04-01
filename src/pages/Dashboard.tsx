@@ -8,6 +8,7 @@ import DailyCheckIn from '@/components/DailyCheckIn';
 import CommunityPreview from '@/components/CommunityPreview';
 import EmergencySupport from '@/components/EmergencySupport';
 import MilestoneCard from '@/components/MilestoneCard';
+import RelapsePrediction from '@/components/RelapsePrediction';
 import { UpcomingMilestones } from '@/components/profile/personal-info';
 import { toast } from 'sonner';
 
@@ -73,6 +74,9 @@ const Dashboard: React.FC = () => {
           
           {/* Right column */}
           <div className="space-y-6">
+            {/* New Relapse Prediction Component */}
+            <RelapsePrediction />
+            
             {/* Mood tracker */}
             <MoodTracker />
             
