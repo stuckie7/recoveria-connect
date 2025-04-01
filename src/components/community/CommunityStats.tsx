@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, MessageSquare, User, Trophy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CommunityStatsProps {
   postCount: number;
@@ -9,6 +10,7 @@ interface CommunityStatsProps {
 }
 
 const CommunityStats: React.FC<CommunityStatsProps> = ({ postCount, label = 'Posts' }) => {
+  const { user } = useAuth();
   const [activeMembersCount, setActiveMembersCount] = useState<number>(0);
   const [onlineUsersCount, setOnlineUsersCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -46,18 +48,15 @@ const CommunityStats: React.FC<CommunityStatsProps> = ({ postCount, label = 'Pos
         setOnlineUsersCount(onlineData || 0);
         
         // Update current user's presence
-        if (supabase.auth.getUser) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            // Update or insert user's presence
-            await supabase
-              .from('user_presence')
-              .upsert({ 
-                id: user.id, 
-                last_seen: new Date().toISOString(),
-                is_online: true
-              });
-          }
+        if (user) {
+          // Update or insert user's presence
+          await supabase
+            .from('user_presence')
+            .upsert({ 
+              id: user.id, 
+              last_seen: new Date().toISOString(),
+              is_online: true
+            });
         }
       } catch (error) {
         console.error('Error fetching user stats:', error);
@@ -76,7 +75,7 @@ const CommunityStats: React.FC<CommunityStatsProps> = ({ postCount, label = 'Pos
     return () => {
       clearInterval(presenceInterval);
     };
-  }, []);
+  }, [user]);
 
   // Helper function to display counts with animations
   const displayCount = (count: number, isLoading: boolean) => {

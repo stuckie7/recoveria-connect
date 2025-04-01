@@ -18,7 +18,19 @@ export const useSession = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event);
-        handleSessionChange(session);
+        
+        // Only use the immediate synchronous operations here
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Use setTimeout to avoid potential deadlocks with Supabase auth
+        if (session?.user) {
+          setTimeout(() => {
+            handleUserSession(session);
+          }, 0);
+        } else {
+          setLoading(false);
+        }
       }
     );
 
@@ -36,7 +48,15 @@ export const useSession = () => {
           return data.session;
         });
         
-        await handleSessionChange(session);
+        // Set session state synchronously
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await handleUserSession(session);
+        } else {
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error getting initial session after retries:', error);
         toast({
@@ -49,25 +69,18 @@ export const useSession = () => {
     };
 
     // Extracted session handling logic
-    const handleSessionChange = async (session: Session | null) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        try {
-          await userProfileService.ensureUserProfile(session.user);
-          await setUserOnline(session.user);
-        } catch (error) {
-          console.error('Error in profile management:', error);
-          toast({
-            title: "Profile Error",
-            description: "There was a problem with your profile setup.",
-            variant: "destructive",
-          });
-        } finally {
-          setLoading(false);
-        }
-      } else {
+    const handleUserSession = async (session: Session) => {
+      try {
+        await userProfileService.ensureUserProfile(session.user);
+        await setUserOnline(session.user);
+      } catch (error) {
+        console.error('Error in profile management:', error);
+        toast({
+          title: "Profile Error",
+          description: "There was a problem with your profile setup.",
+          variant: "destructive",
+        });
+      } finally {
         setLoading(false);
       }
     };

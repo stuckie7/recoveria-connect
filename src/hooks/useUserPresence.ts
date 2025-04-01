@@ -13,12 +13,20 @@ export const useUserPresence = () => {
 
   // Function to update presence record
   const updatePresence = async (userId: string, isOnline: boolean = true) => {
-    if (!userId || updating) return;
+    if (!userId || updating) return false;
     
     setUpdating(true);
     
     try {
       const result = await performWithRetry(async () => {
+        // First check if user exists in auth.users to avoid foreign key constraint errors
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+        
+        if (userError || !userData.user) {
+          console.error('User does not exist or cannot be verified:', userError);
+          return false;
+        }
+        
         const { error: presenceError } = await supabase.from('user_presence').upsert({
           id: userId,
           is_online: isOnline,
@@ -35,6 +43,8 @@ export const useUserPresence = () => {
       if (result) {
         console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
       }
+      
+      return result;
     } catch (error) {
       console.error(`Failed to update presence record after multiple attempts:`, error);
       
@@ -44,11 +54,11 @@ export const useUserPresence = () => {
         description: "Unable to update your online status. Some social features may be limited.",
         variant: "destructive",
       });
+      
+      return false;
     } finally {
       setUpdating(false);
     }
-    
-    return false;
   };
 
   const setUserOnline = (user: User | null) => {
