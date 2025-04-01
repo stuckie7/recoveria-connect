@@ -59,6 +59,18 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
             description: "This email address is already registered",
             variant: "destructive",
           });
+        } else if (error.message.includes('password')) {
+          toast({
+            title: "Password Error",
+            description: "Password doesn't meet requirements",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('email')) {
+          toast({
+            title: "Email Error",
+            description: "Please provide a valid email address",
+            variant: "destructive",
+          });
         } else {
           toast({
             title: "Sign up failed",
