@@ -18,27 +18,42 @@ export const useUserPresence = () => {
     setUpdating(true);
     
     try {
-      // Try to update the presence record, but don't block authentication if it fails
-      await performWithRetry(async () => {
-        const { error } = await supabase.from('user_presence').upsert({
+      const result = await performWithRetry(async () => {
+        // First check if user exists in auth.users to avoid foreign key constraint errors
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+        
+        if (userError || !userData.user) {
+          console.error('User does not exist or cannot be verified:', userError);
+          return false;
+        }
+        
+        const { error: presenceError } = await supabase.from('user_presence').upsert({
           id: userId,
           is_online: isOnline,
           last_seen: new Date().toISOString()
         });
         
-        if (error) {
-          console.error('Error updating presence:', error);
-          // We're not throwing here, just logging the error
+        if (presenceError) {
+          throw presenceError;
         }
-      }, 2); // Only retry once to avoid delaying authentication flow
+        
+        return true;
+      });
       
-      console.log(`User presence ${isOnline ? 'online' : 'offline'} status attempted for: ${userId}`);
-      return true;
+      if (result) {
+        console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
+      }
+      
+      return result;
     } catch (error) {
-      console.error(`Failed to update presence record:`, error);
+      console.error(`Failed to update presence record after multiple attempts:`, error);
       
-      // Don't show a toast for presence errors to avoid disrupting user experience
-      // Only log to console since this is non-critical
+      // Don't throw error as presence is not critical to core functionality
+      toast({
+        title: "Presence Update Warning",
+        description: "Unable to update your online status. Some social features may be limited.",
+        variant: "destructive",
+      });
       
       return false;
     } finally {

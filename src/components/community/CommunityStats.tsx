@@ -47,21 +47,16 @@ const CommunityStats: React.FC<CommunityStatsProps> = ({ postCount, label = 'Pos
         setActiveMembersCount(activeData || 0);
         setOnlineUsersCount(onlineData || 0);
         
-        // Update current user's presence, but don't block if it fails
+        // Update current user's presence
         if (user) {
-          try {
-            // Update or insert user's presence
-            await supabase
-              .from('user_presence')
-              .upsert({ 
-                id: user.id, 
-                last_seen: new Date().toISOString(),
-                is_online: true
-              });
-          } catch (presenceError) {
-            console.error('Failed to update presence in CommunityStats:', presenceError);
-            // Continue even if presence update fails
-          }
+          // Update or insert user's presence
+          await supabase
+            .from('user_presence')
+            .upsert({ 
+              id: user.id, 
+              last_seen: new Date().toISOString(),
+              is_online: true
+            });
         }
       } catch (error) {
         console.error('Error fetching user stats:', error);

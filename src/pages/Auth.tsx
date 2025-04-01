@@ -5,7 +5,6 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { toast } from "@/components/ui/use-toast";
-import { performWithRetry } from '@/utils/retryUtil';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -15,9 +14,7 @@ const Auth = () => {
   // Check if user is already logged in
   useEffect(() => {
     // First check for existing session (this won't trigger a redirect yet)
-    performWithRetry(async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('Session error:', error);
         toast({
@@ -26,7 +23,7 @@ const Auth = () => {
           variant: "destructive",
         });
         setLoading(false);
-        throw error;
+        return;
       }
       
       if (session?.user) {
@@ -36,7 +33,7 @@ const Auth = () => {
         console.log('Initial session check: No user found');
         setLoading(false);
       }
-    }, 3).catch(() => setLoading(false));
+    });
 
     // Set up auth listener for changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -47,13 +44,7 @@ const Auth = () => {
           
           // Use setTimeout to avoid any racing conditions
           setTimeout(() => {
-            // Continue with redirect even if presence update fails
-            try {
-              navigate('/welcome');
-            } catch (error) {
-              console.error('Navigation error:', error);
-              setLoading(false);
-            }
+            navigate('/welcome');
           }, 100);
         } else if (event === 'SIGNED_OUT') {
           console.log('Auth state change: SIGNED_OUT');
