@@ -41,7 +41,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
     setLoading(true);
     
     try {
-      // No need to check existing user - let Supabase handle this
+      // Let Supabase handle email uniqueness constraints
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
