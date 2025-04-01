@@ -1,9 +1,8 @@
 
 import { User } from '@supabase/supabase-js';
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, ensureUserProfile } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
-import { performWithRetry } from '@/utils/retryUtil';
 
 /**
  * Hook to manage user presence state (online/offline)
@@ -18,13 +17,16 @@ export const useUserPresence = () => {
     setUpdating(true);
     
     try {
-      // First ensure the profile exists before trying to update presence
+      // First ensure the profile exists
       const profileExists = await ensureUserProfile(userId);
       
       if (!profileExists) {
         console.error("Could not ensure profile exists for user:", userId);
         return false;
       }
+      
+      // Important: Add a small delay to ensure the profile has been created in the database
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Now update the presence
       const { error: presenceError } = await supabase.from('user_presence').upsert({
@@ -52,58 +54,6 @@ export const useUserPresence = () => {
       return false;
     } finally {
       setUpdating(false);
-    }
-  };
-  
-  // Helper function to ensure user profile exists
-  const ensureUserProfile = async (userId: string): Promise<boolean> => {
-    try {
-      // Try to get the user for email info if needed
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !userData.user) {
-        console.error('Could not get current user:', userError);
-        return false;
-      }
-      
-      return await performWithRetry(async () => {
-        // First check if profile exists
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle();
-        
-        if (profileError) {
-          console.error('Error checking for profile:', profileError);
-          return false;
-        }
-        
-        // If profile doesn't exist yet, create it first
-        if (!profileData) {
-          console.log('Profile not found for user, creating one:', userId);
-          
-          const { error: createProfileError } = await supabase
-            .from('profiles')
-            .insert({ 
-              id: userId, 
-              email: userData.user.email 
-            });
-          
-          if (createProfileError) {
-            console.error('Error creating profile:', createProfileError);
-            return false;
-          }
-          
-          // Wait a moment for the profile creation to be processed
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-        
-        return true;
-      }, 3); // 3 retries
-    } catch (error) {
-      console.error('Error ensuring user profile exists:', error);
-      return false;
     }
   };
 

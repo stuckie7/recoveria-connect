@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, ensureUserProfile } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { performWithRetry } from '@/utils/retryUtil';
 
 interface SignupFormProps {
   loading: boolean;
@@ -64,22 +62,13 @@ export const SignupForm: React.FC<SignupFormProps> = ({ loading, setLoading }) =
         return;
       }
       
-      // Explicitly create profile for the user to ensure it exists before presence record
+      // Explicitly create profile for the user to ensure it exists
       if (data?.user) {
         try {
-          // Use retry mechanism to ensure profile creation
-          await performWithRetry(async () => {
-            const { error: profileError } = await supabase.from('profiles').insert({
-              id: data.user.id,
-              email: data.user.email
-            });
-            
-            if (profileError) {
-              throw new Error(`Error creating profile: ${profileError.message}`);
-            }
-            
-            return true;
-          }, 3); // 3 retries
+          // Wait a moment before trying to create the profile
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          await ensureUserProfile(data.user.id, data.user.email);
         } catch (profileError) {
           console.error('Failed to create profile during signup:', profileError);
           // Continue signup flow despite profile creation errors
