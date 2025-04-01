@@ -2,14 +2,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Get environment variables or fallback to empty strings
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Get environment variables or use default fallback values for local development
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bisrbwpjmtwfqkwvzdor.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpc3Jid3BqbXR3ZnFrd3Z6ZG9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NTkzODMsImV4cCI6MjA1ODQzNTM4M30.KvQuyChW0gYs-2HewFQGGtGmtj0z0Dt_Kr2g1klfkHg';
 
-// Verify that the environment variables are set
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('Supabase URL or key is missing. Authentication will not work.');
-}
+// Log which values we're using
+console.log('Initializing Supabase client with URL:', SUPABASE_URL ? 'Valid URL' : 'Missing URL');
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
@@ -17,6 +15,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     storage: localStorage,
     detectSessionInUrl: true,
-    flowType: 'pkce'  // Changed from 'implicit'
+    flowType: 'pkce'  // Using PKCE flow type
   }
 });
