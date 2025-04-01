@@ -87,17 +87,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', user.id)
         .maybeSingle();
       
-      // Create profile if not exists (regardless of error state)
+      // Create profile if it doesn't exist (now only checking !profile, not the error)
       if (!profile) {
         console.log('Creating profile for user:', user.id);
         try {
-          await supabase.from('profiles').insert({
+          const { error: insertError } = await supabase.from('profiles').insert({
             id: user.id,
             email: user.email,
           });
-          console.log('Created user profile for:', user.id);
+          
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+            toast({
+              title: "Profile Creation Error",
+              description: "There was a problem creating your profile. Please try again or contact support.",
+              variant: "destructive",
+            });
+            // Continue execution even if profile creation fails
+          } else {
+            console.log('Created user profile for:', user.id);
+          }
         } catch (error) {
-          console.error('Error creating profile:', error);
+          console.error('Error in profile creation:', error);
           // We don't throw here as we want to continue with presence
         }
       } else {
