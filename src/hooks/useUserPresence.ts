@@ -38,7 +38,10 @@ export const useUserPresence = () => {
           
           const { error: createProfileError } = await supabase
             .from('profiles')
-            .insert({ id: userId, email: userData.user.email });
+            .insert({ 
+              id: userId, 
+              email: userData.user.email 
+            });
           
           if (createProfileError) {
             console.error('Error creating profile:', createProfileError);
@@ -68,7 +71,6 @@ export const useUserPresence = () => {
     } catch (error) {
       console.error(`Failed to update presence record after multiple attempts:`, error);
       
-      // Don't throw error as presence is not critical to core functionality
       toast({
         title: "Presence Update Warning",
         description: "Unable to update your online status. Some social features may be limited.",

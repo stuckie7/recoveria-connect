@@ -30,7 +30,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
     setLoading(true);
     
     try {
-      // First check if the user has a profile
+      // Login with email and password
       const { data: userData, error: userError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -67,9 +67,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
         return;
       }
       
+      // Ensure the user has a profile before presence record is created
       if (userData.user) {
         try {
-          // Ensure the user has a profile
+          // First check if profile exists
           const { data: profile } = await supabase
             .from('profiles')
             .select('id')
