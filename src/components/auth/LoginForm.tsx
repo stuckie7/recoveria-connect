@@ -69,7 +69,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
           });
         }
         setLoading(false);
-        return;
+        return; // Return instead of throwing
       }
       
       // Successfully signed in - the auth listener will handle redirect
