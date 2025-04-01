@@ -57,9 +57,10 @@ export const analyzeFrequentTriggers = (
       recommendations.push({
         id: 'trigger-' + mostFrequentTriggerId,
         type: 'triggers',
-        resources: relevantResources.map(r => r.id),
+        resourceIds: relevantResources.map(r => r.id),
         reason: `You've frequently mentioned "${mostFrequentTrigger.name}" as a trigger. These resources may help you manage it better.`,
-        priority: 8
+        priority: 8,
+        createdAt: new Date().toISOString()
       });
     }
   }

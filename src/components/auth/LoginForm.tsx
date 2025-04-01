@@ -19,24 +19,73 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Attempt to sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        
+        // Handle different error types
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your email to confirm your account",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Invalid login credentials')) {
+          toast({
+            title: "Invalid credentials",
+            description: "The email or password you entered is incorrect",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Database error')) {
+          toast({
+            title: "Authentication Error",
+            description: "We're experiencing technical difficulties. Please try again in a few moments.",
+            variant: "destructive",
+          });
+          console.error("Database error during authentication:", error.message);
+        } else {
+          toast({
+            title: "Login failed",
+            description: error.message || "An error occurred during login",
+            variant: "destructive",
+          });
+        }
+        setLoading(false);
+        return; // Return instead of throwing
+      }
       
-      // Successfully signed in and will be redirected by the auth listener
+      // Successfully signed in - the auth listener will handle redirect
+      if (data?.session) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
-        title: "Error",
-        description: error.message || "Invalid login credentials",
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -87,6 +136,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
         disabled={loading}
       >
         {loading ? "Logging in..." : "Login"}
+        {!loading && <LogIn className="ml-2 h-4 w-4" />}
       </Button>
     </form>
   );
