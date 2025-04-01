@@ -13,26 +13,7 @@ const Auth = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    // Set up auth listener first
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('Auth state change: SIGNED_IN', session.user.id);
-          setUser(session.user);
-          
-          // First navigate, then set up user data asynchronously
-          navigate('/welcome');
-        } else if (event === 'SIGNED_OUT') {
-          console.log('Auth state change: SIGNED_OUT');
-          setUser(null);
-          setLoading(false);
-        } else {
-          setLoading(false);
-        }
-      }
-    );
-
-    // Initial session check
+    // First check for existing session (this won't trigger a redirect yet)
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('Session error:', error);
@@ -48,19 +29,40 @@ const Auth = () => {
       if (session?.user) {
         console.log('Initial session check: User found', session.user.id);
         setUser(session.user);
-        navigate('/welcome');
       } else {
         console.log('Initial session check: No user found');
         setLoading(false);
       }
     });
 
+    // Set up auth listener for changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('Auth state change: SIGNED_IN', session.user.id);
+          setUser(session.user);
+          
+          // Use setTimeout to avoid any racing conditions
+          setTimeout(() => {
+            navigate('/welcome');
+          }, 100);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('Auth state change: SIGNED_OUT');
+          setUser(null);
+          setLoading(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    );
+
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, [navigate]);
 
-  if (loading) {
+  // If we have a user but we're still loading, show a loading state
+  if (user || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 hero-gradient">
         <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>

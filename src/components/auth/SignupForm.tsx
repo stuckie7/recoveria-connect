@@ -41,23 +41,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
     setLoading(true);
     
     try {
-      // Check if email is already in use
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle();
-        
-      if (existingUser) {
-        toast({
-          title: "Email already in use",
-          description: "This email address is already registered",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-      
+      // No need to check existing user - let Supabase handle this
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -68,20 +52,42 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast({
+            title: "Email already in use",
+            description: "This email address is already registered",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Sign up failed",
+            description: error.message || "An error occurred during sign up",
+            variant: "destructive",
+          });
+        }
+        console.error('Signup error:', error);
+        setLoading(false);
+        return;
+      }
       
       toast({
         title: "Success!",
-        description: "Check your email for the confirmation link.",
+        description: "Check your email for the confirmation link, or login if verification is disabled.",
       });
+      
+      // Reset form
+      setEmail('');
+      setPassword('');
+      setLoading(false);
+      
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
         title: "Sign up failed",
-        description: error.message || "An error occurred during sign up",
+        description: error.message || "An unexpected error occurred during sign up",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };

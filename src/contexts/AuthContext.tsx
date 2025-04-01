@@ -19,80 +19,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener FIRST (very important for auth flow)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        console.log('Auth state change:', event);
+        
+        // Only update session/user state synchronously here
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        
+        // If a user is found and they just signed in, handle profile setup
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Use setTimeout to avoid Supabase auth deadlocks
+          setTimeout(() => {
+            ensureUserProfile(session.user);
+          }, 500);
+        }
+        
+        // Mark as not loading unless we're in sign-in
+        if (event !== 'SIGNED_IN') {
+          setLoading(false);
+        }
       }
     );
 
-    // THEN check for existing session
+    // THEN check for initial session
     const getInitialSession = async () => {
       try {
-        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         setSession(session);
         setUser(session?.user ?? null);
         
-        // If a user is found, handle profile/presence separately to avoid
-        // blocking the auth state flow
         if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', session.user.id)
-                .maybeSingle();
-                
-              // If there's no profile, we need to create one
-              if (!profile && profileError) {
-                try {
-                  // Create a basic profile
-                  await supabase.from('profiles').insert({
-                    id: session.user.id,
-                    email: session.user.email,
-                  });
-                  
-                  console.log('Created user profile for:', session.user.id);
-                  
-                  // Add a delay before attempting to create presence
-                  await new Promise(resolve => setTimeout(resolve, 2000));
-                  
-                  // Create presence record
-                  const { error: presenceError } = await supabase.from('user_presence').upsert({
-                    id: session.user.id,
-                    is_online: true,
-                    last_seen: new Date().toISOString()
-                  });
-                  
-                  if (presenceError) {
-                    console.error('Error creating presence record:', presenceError);
-                  } else {
-                    console.log('Created presence record for:', session.user.id);
-                  }
-                } catch (error) {
-                  console.error('Error in profile/presence creation:', error);
-                }
-              } else {
-                // If profile exists, just update presence
-                try {
-                  await supabase.from('user_presence').upsert({
-                    id: session.user.id,
-                    is_online: true,
-                    last_seen: new Date().toISOString()
-                  });
-                } catch (presenceError) {
-                  console.error('Error updating user presence:', presenceError);
-                }
-              }
-            } catch (error) {
-              console.error('Error in session initialization:', error);
-            }
-          }, 0); // Using setTimeout to avoid blocking auth flow
+          // Use setTimeout to avoid Supabase auth deadlocks
+          setTimeout(() => {
+            ensureUserProfile(session.user);
+          }, 500);
+        } else {
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
@@ -101,7 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "There was a problem retrieving your session. Please try again.",
           variant: "destructive",
         });
-      } finally {
         setLoading(false);
       }
     };
@@ -113,9 +77,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Centralized function to ensure user profile exists
+  const ensureUserProfile = async (user: User) => {
+    try {
+      // Check if profile exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      // Create profile if not exists (regardless of error state)
+      if (!profile) {
+        console.log('Creating profile for user:', user.id);
+        try {
+          await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email,
+          });
+          console.log('Created user profile for:', user.id);
+        } catch (error) {
+          console.error('Error creating profile:', error);
+          // We don't throw here as we want to continue with presence
+        }
+      } else {
+        console.log('Profile already exists for user:', user.id);
+      }
+      
+      // Add some delay before updating presence
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Always update presence record
+      try {
+        const { error: presenceError } = await supabase.from('user_presence').upsert({
+          id: user.id,
+          is_online: true,
+          last_seen: new Date().toISOString()
+        });
+        
+        if (presenceError) {
+          console.error('Error updating user presence:', presenceError);
+        } else {
+          console.log('Updated presence for user:', user.id);
+        }
+      } catch (error) {
+        console.error('Exception updating presence:', error);
+      }
+      
+      // Only mark loading as false when we're done with all operations
+      setLoading(false);
+      
+    } catch (error) {
+      console.error('Error in profile verification:', error);
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       setLoading(true);
+      
       // If there's a user, update their online status
       if (user) {
         try {

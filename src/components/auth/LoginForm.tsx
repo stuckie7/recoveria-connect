@@ -39,6 +39,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
       });
       
       if (error) {
+        console.error('Login error:', error);
+        
+        // Handle different error types
         if (error.message.includes('Email not confirmed')) {
           toast({
             title: "Email not confirmed",
@@ -65,10 +68,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
             variant: "destructive",
           });
         }
-        throw error;
+        setLoading(false);
+        return;
       }
       
-      // Successfully signed in - will be redirected by the auth listener
+      // Successfully signed in - the auth listener will handle redirect
       if (data?.session) {
         toast({
           title: "Login successful",
@@ -77,8 +81,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ setLoading, loading }) => 
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      // Error already handled in the try block
-    } finally {
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
       setLoading(false);
     }
   };
