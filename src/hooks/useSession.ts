@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
 import { userProfileService } from '@/services/userProfileService';
 import { useUserPresence } from './useUserPresence';
+import { performWithRetry } from '@/utils/retryUtil';
 
 export const useSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -24,10 +25,20 @@ export const useSession = () => {
     // THEN check for initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Use retry for getting session
+        const session = await performWithRetry(async () => {
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            throw error;
+          }
+          
+          return data.session;
+        });
+        
         await handleSessionChange(session);
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error getting initial session after retries:', error);
         toast({
           title: "Authentication Error",
           description: "There was a problem retrieving your session. Please try again.",
