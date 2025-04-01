@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { performWithRetry } from '@/utils/retryUtil';
 
 interface LoginFormProps {
   loading: boolean;
@@ -30,7 +31,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
     setLoading(true);
     
     try {
-      // Login with email and password
+      // Step 1: Attempt login first
       const { data: userData, error: userError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -67,24 +68,36 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
         return;
       }
       
-      // Ensure the user has a profile before presence record is created
-      if (userData.user) {
+      // Step 2: If login successful, ensure profile exists BEFORE any presence updates
+      if (userData?.user) {
         try {
-          // First check if profile exists
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', userData.user.id)
-            .maybeSingle();
+          // Use retry mechanism to ensure profile creation 
+          await performWithRetry(async () => {
+            // First check if profile exists
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', userData.user.id)
+              .maybeSingle();
+              
+            // Create profile if it doesn't exist
+            if (!profile) {
+              console.log('Creating profile for user after login:', userData.user.id);
+              const { error: profileError } = await supabase.from('profiles').insert({
+                id: userData.user.id,
+                email: userData.user.email
+              });
+              
+              if (profileError) {
+                throw new Error(`Error creating profile: ${profileError.message}`);
+              }
+              
+              // Wait a moment to ensure profile is created before any presence updates
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
             
-          // Create profile if it doesn't exist
-          if (!profile) {
-            console.log('Creating profile for user after login:', userData.user.id);
-            await supabase.from('profiles').insert({
-              id: userData.user.id,
-              email: userData.user.email
-            });
-          }
+            return true;
+          }, 3); // 3 retries
         } catch (profileError) {
           console.error('Error ensuring user profile exists:', profileError);
           // Continue login flow despite profile error

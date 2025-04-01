@@ -18,58 +18,30 @@ export const useUserPresence = () => {
     setUpdating(true);
     
     try {
-      const result = await performWithRetry(async () => {
-        // First check if user exists in profiles table
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle();
-        
-        // If profile doesn't exist yet, create it first
-        if (!profileData) {
-          console.log('Profile not found for user, creating one:', userId);
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          
-          if (userError || !userData.user) {
-            console.error('Could not get current user:', userError);
-            return false;
-          }
-          
-          const { error: createProfileError } = await supabase
-            .from('profiles')
-            .insert({ 
-              id: userId, 
-              email: userData.user.email 
-            });
-          
-          if (createProfileError) {
-            console.error('Error creating profile:', createProfileError);
-            return false;
-          }
-        }
-        
-        // Now update the presence
-        const { error: presenceError } = await supabase.from('user_presence').upsert({
-          id: userId,
-          is_online: isOnline,
-          last_seen: new Date().toISOString()
-        });
-        
-        if (presenceError) {
-          throw presenceError;
-        }
-        
-        return true;
-      });
+      // First ensure the profile exists before trying to update presence
+      const profileExists = await ensureUserProfile(userId);
       
-      if (result) {
-        console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
+      if (!profileExists) {
+        console.error("Could not ensure profile exists for user:", userId);
+        return false;
       }
       
-      return result;
+      // Now update the presence
+      const { error: presenceError } = await supabase.from('user_presence').upsert({
+        id: userId,
+        is_online: isOnline,
+        last_seen: new Date().toISOString()
+      });
+      
+      if (presenceError) {
+        console.error("Error updating user presence:", presenceError);
+        return false;
+      }
+      
+      console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
+      return true;
     } catch (error) {
-      console.error(`Failed to update presence record after multiple attempts:`, error);
+      console.error(`Failed to update presence record:`, error);
       
       toast({
         title: "Presence Update Warning",
@@ -82,17 +54,69 @@ export const useUserPresence = () => {
       setUpdating(false);
     }
   };
+  
+  // Helper function to ensure user profile exists
+  const ensureUserProfile = async (userId: string): Promise<boolean> => {
+    try {
+      // Try to get the user for email info if needed
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData.user) {
+        console.error('Could not get current user:', userError);
+        return false;
+      }
+      
+      return await performWithRetry(async () => {
+        // First check if profile exists
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+        
+        if (profileError) {
+          console.error('Error checking for profile:', profileError);
+          return false;
+        }
+        
+        // If profile doesn't exist yet, create it first
+        if (!profileData) {
+          console.log('Profile not found for user, creating one:', userId);
+          
+          const { error: createProfileError } = await supabase
+            .from('profiles')
+            .insert({ 
+              id: userId, 
+              email: userData.user.email 
+            });
+          
+          if (createProfileError) {
+            console.error('Error creating profile:', createProfileError);
+            return false;
+          }
+          
+          // Wait a moment for the profile creation to be processed
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        return true;
+      }, 3); // 3 retries
+    } catch (error) {
+      console.error('Error ensuring user profile exists:', error);
+      return false;
+    }
+  };
 
-  const setUserOnline = (user: User | null) => {
+  const setUserOnline = async (user: User | null) => {
     if (user) {
-      return updatePresence(user.id, true);
+      return await updatePresence(user.id, true);
     }
     return Promise.resolve(false);
   };
 
-  const setUserOffline = (user: User | null) => {
+  const setUserOffline = async (user: User | null) => {
     if (user) {
-      return updatePresence(user.id, false);
+      return await updatePresence(user.id, false);
     }
     return Promise.resolve(false);
   };
