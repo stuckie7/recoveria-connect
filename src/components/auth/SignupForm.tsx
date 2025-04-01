@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,11 +44,6 @@ export const SignupForm: React.FC<SignupFormProps> = ({ setLoading, loading }) =
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            email: email,
-          }
-        }
       });
       
       if (error) {
