@@ -24,11 +24,7 @@ const Navbar: React.FC = () => {
   const { user, signOut, loading } = useAuth();
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // If auth is still loading, don't render the navbar yet
-  if (loading) {
-    return null;
-  }
-
+  // Move useEffect hooks before any conditional returns
   useEffect(() => {
     if (user) {
       try {
@@ -54,6 +50,11 @@ const Navbar: React.FC = () => {
     await signOut();
     navigate('/auth');
   };
+
+  // After all hooks, now we can have conditional returns
+  if (loading) {
+    return null;
+  }
 
   if (!user && pathname !== '/welcome') {
     return null;
