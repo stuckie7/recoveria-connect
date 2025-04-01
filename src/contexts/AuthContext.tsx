@@ -96,6 +96,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Function to create/update presence record with retry logic
+  const createPresenceRecord = async (userId: string) => {
+    const maxRetries = 3;
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+      try {
+        const { error: presenceError } = await supabase.from('user_presence').upsert({
+          id: userId,
+          is_online: true,
+          last_seen: new Date().toISOString()
+        });
+        
+        if (!presenceError) {
+          console.log('Created/updated presence record for:', userId);
+          return;
+        }
+        
+        console.error(`Attempt ${retries + 1} failed:`, presenceError);
+        retries++;
+        
+        if (retries < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+        }
+      } catch (error) {
+        console.error(`Unexpected error in attempt ${retries + 1}:`, error);
+        retries++;
+        
+        if (retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+        }
+      }
+    }
+    
+    console.error(`Failed to create presence record after ${maxRetries} attempts`);
+    // Don't throw error as presence is not critical to core functionality
+    toast({
+      title: "Presence Update Warning",
+      description: "Unable to update your online status. Some social features may be limited.",
+      variant: "destructive",
+    });
+  };
+
   // Centralized function to ensure user profile exists
   const ensureUserProfile = async (user: User) => {
     try {
@@ -137,23 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Add some delay before updating presence
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Always update presence record
-      try {
-        const { error: presenceError } = await supabase.from('user_presence').upsert({
-          id: user.id,
-          is_online: true,
-          last_seen: new Date().toISOString()
-        });
-        
-        if (presenceError) {
-          console.error('Error updating user presence:', presenceError);
-          // Don't throw here, since presence is less critical than profile
-        } else {
-          console.log('Updated presence for user:', user.id);
-        }
-      } catch (error) {
-        console.error('Exception updating presence:', error);
-      }
+      // Use the new retry function for presence records
+      await createPresenceRecord(user.id);
+      
     } catch (error) {
       console.error('Error in profile verification:', error);
       throw error; // Re-throw to allow caller to handle
