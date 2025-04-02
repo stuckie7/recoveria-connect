@@ -18,15 +18,23 @@ export const useUserPresence = () => {
     
     try {
       // First ensure the profile exists - CRITICAL for foreign key constraint
+      console.log('Ensuring profile exists before updating presence...');
       const profileExists = await ensureUserProfile(userId);
       
       if (!profileExists) {
         console.error("Could not ensure profile exists for user:", userId);
+        toast({
+          title: "Profile Error",
+          description: "There was an issue with your user profile. Please try again.",
+          variant: "destructive",
+        });
         return false;
       }
       
+      console.log('Profile confirmed to exist, now updating presence...');
+      
       // Important: Add a delay to ensure the profile has been created in the database
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Retry the presence update if it fails initially
       let success = false;
@@ -37,6 +45,19 @@ export const useUserPresence = () => {
         attempts++;
         
         try {
+          // First verify profile still exists
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .single();
+            
+          if (verifyError || !verifyData) {
+            console.error('Profile verification failed before presence update:', verifyError);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            continue;
+          }
+        
           const { error: presenceError } = await supabase.from('user_presence').upsert({
             id: userId,
             is_online: isOnline,

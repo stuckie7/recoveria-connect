@@ -37,6 +37,8 @@ export const useSession = () => {
     // THEN check for initial session
     const getInitialSession = async () => {
       try {
+        console.log("Getting initial session...");
+        
         // Use retry for getting session
         const session = await performWithRetry(async () => {
           const { data, error } = await supabase.auth.getSession();
@@ -46,15 +48,17 @@ export const useSession = () => {
           }
           
           return data.session;
-        });
+        }, 3);
         
         // Set session state synchronously
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log("Initial session found, handling user session...");
           await handleUserSession(session);
         } else {
+          console.log("No initial session found");
           setLoading(false);
         }
       } catch (error) {
@@ -71,7 +75,15 @@ export const useSession = () => {
     // Extracted session handling logic
     const handleUserSession = async (session: Session) => {
       try {
+        console.log("Ensuring user profile exists...");
+        // First ensure profile exists
         await userProfileService.ensureUserProfile(session.user);
+        
+        // Add a delay to ensure profile is fully created
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log("Setting user online status...");
+        // Then set user online status
         await setUserOnline(session.user);
       } catch (error) {
         console.error('Error in profile management:', error);

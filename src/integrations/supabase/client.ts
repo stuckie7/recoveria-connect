@@ -22,53 +22,74 @@ export const ensureUserProfile = async (userId: string, email?: string | null): 
   if (!userId) return false;
   
   try {
-    // First check if profile exists
-    const { data: profileData, error: profileCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .maybeSingle();
+    // Implement with retry logic
+    let retryCount = 0;
+    const maxRetries = 3;
     
-    if (profileCheckError) {
-      console.error('Error checking profile:', profileCheckError);
-      return false;
-    }
-    
-    // If profile doesn't exist yet, create it
-    if (!profileData) {
-      console.log('Profile not found, creating one for user:', userId);
-      
-      // Create the profile with retry mechanism
-      let retries = 3;
-      let profileCreated = false;
-      
-      while (retries > 0 && !profileCreated) {
-        const { error: createError } = await supabase
+    while (retryCount < maxRetries) {
+      try {
+        // First check if profile exists
+        const { data: profileData, error: profileCheckError } = await supabase
           .from('profiles')
-          .insert({ 
-            id: userId, 
-            email: email || undefined
-          });
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
         
-        if (createError) {
-          console.error(`Error creating profile (attempt ${4-retries}):`, createError);
-          retries--;
+        if (profileCheckError) {
+          console.error('Error checking profile:', profileCheckError);
           // Wait before retrying
           await new Promise(resolve => setTimeout(resolve, 500));
-        } else {
-          profileCreated = true;
+          retryCount++;
+          continue;
         }
+        
+        // If profile doesn't exist yet, create it
+        if (!profileData) {
+          console.log('Profile not found, creating one for user:', userId);
+          
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert({ 
+              id: userId, 
+              email: email || undefined
+            });
+          
+          if (createError) {
+            console.error(`Error creating profile (attempt ${retryCount + 1}):`, createError);
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 500));
+            retryCount++;
+            continue;
+          }
+          
+          // Wait for the profile to be created
+          console.log('Profile created, waiting for database consistency...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Verify profile was created
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .single();
+          
+          if (verifyError || !verifyData) {
+            console.error('Profile verification failed:', verifyError);
+            retryCount++;
+            continue;
+          }
+        }
+        
+        return true;
+      } catch (err) {
+        console.error('Error in profile creation attempt:', err);
+        retryCount++;
+        if (retryCount >= maxRetries) throw err;
+        await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
       }
-      
-      if (!profileCreated) {
-        return false;
-      }
-      
-      // Wait a moment for the profile creation to be processed
-      await new Promise(resolve => setTimeout(resolve, 800));
     }
     
-    return true;
+    return false;
   } catch (error) {
     console.error('Error in ensureUserProfile:', error);
     return false;

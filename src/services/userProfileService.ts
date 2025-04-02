@@ -13,6 +13,8 @@ export const userProfileService = {
    */
   ensureUserProfile: async (user: User): Promise<boolean> => {
     try {
+      console.log(`Ensuring profile exists for user: ${user.id}`);
+      
       // Check if profile exists using retry mechanism
       const profile = await performWithRetry(async () => {
         const { data, error } = await supabase
@@ -22,15 +24,16 @@ export const userProfileService = {
           .maybeSingle();
         
         if (error) {
+          console.error('Error checking if profile exists:', error);
           throw error;
         }
         
         return data;
-      });
+      }, 3);
       
       // Create profile if it doesn't exist (with retry)
       if (!profile) {
-        console.log('Creating profile for user:', user.id);
+        console.log('Profile not found, creating one...');
         
         await performWithRetry(async () => {
           const { error } = await supabase.from('profiles').insert({
@@ -39,18 +42,42 @@ export const userProfileService = {
           });
           
           if (error) {
+            console.error('Error creating profile:', error);
             throw error;
           }
           
           return true;
-        });
+        }, 5);
         
-        console.log('Created user profile for:', user.id);
+        // Wait for profile creation to be processed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Verify profile was created
+        const verifyResult = await performWithRetry(async () => {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error verifying profile creation:', error);
+            throw error;
+          }
+          
+          if (!data) {
+            throw new Error('Profile was not created successfully');
+          }
+          
+          return data;
+        }, 3);
+        
+        console.log('Created and verified user profile for:', user.id);
+        return !!verifyResult;
       } else {
         console.log('Profile already exists for user:', user.id);
+        return true;
       }
-      
-      return true;
     } catch (error) {
       console.error('Error in profile verification after multiple retries:', error);
       toast({
@@ -58,7 +85,7 @@ export const userProfileService = {
         description: "There was a problem creating your profile. Please try again or contact support.",
         variant: "destructive",
       });
-      throw error;
+      return false;
     }
   }
 };

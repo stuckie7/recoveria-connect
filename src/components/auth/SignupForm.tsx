@@ -43,6 +43,9 @@ export const SignupForm: React.FC<SignupFormProps> = ({ loading, setLoading }) =
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin + '/welcome'
+        }
       });
       
       if (error) {
@@ -67,25 +70,33 @@ export const SignupForm: React.FC<SignupFormProps> = ({ loading, setLoading }) =
       let profileSuccess = false;
       if (data?.user) {
         try {
+          console.log("Signup successful, creating profile...");
+          
           // Wait a longer time before trying to create the profile
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1500));
           
           // Retry profile creation multiple times if necessary
-          for (let i = 0; i < 3; i++) {
+          for (let i = 0; i < 5; i++) {
             try {
               profileSuccess = await ensureUserProfile(data.user.id, data.user.email);
-              if (profileSuccess) break;
+              if (profileSuccess) {
+                console.log(`Profile successfully created on attempt ${i+1}`);
+                break;
+              }
               
+              console.log(`Profile creation attempt ${i+1} didn't succeed, retrying...`);
               // Wait between retries
-              await new Promise(resolve => setTimeout(resolve, 500));
+              await new Promise(resolve => setTimeout(resolve, 800));
             } catch (err) {
               console.error(`Profile creation attempt ${i+1} failed:`, err);
               // Continue with retries
+              await new Promise(resolve => setTimeout(resolve, 800));
             }
           }
           
           if (!profileSuccess) {
             console.warn("Failed to create profile after multiple attempts");
+            // But continue with the signup flow
           }
         } catch (profileError) {
           console.error('Failed to create profile during signup:', profileError);

@@ -4,26 +4,31 @@
  */
 export const performWithRetry = async <T>(
   operation: () => Promise<T>, 
-  maxRetries = 3
+  maxRetries = 3,
+  initialDelay = 500
 ): Promise<T> => {
   let retries = 0;
+  let lastError: Error | null = null;
   
   while (retries < maxRetries) {
     try {
       return await operation();
     } catch (error) {
+      lastError = error as Error;
       console.error(`Attempt ${retries + 1} failed:`, error);
       retries++;
       
       if (retries >= maxRetries) {
-        throw new Error(`Operation failed after ${maxRetries} attempts: ${error.message}`);
+        break;
       }
       
-      // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+      // Exponential backoff with jitter
+      const delay = initialDelay * Math.pow(2, retries) * (0.8 + Math.random() * 0.4);
+      console.log(`Retrying in ${Math.round(delay)}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
-  // This should never be reached due to the throw above, but TypeScript needs it
-  throw new Error("Unexpected execution path in retry utility");
+  // This should only be reached if all retries failed
+  throw new Error(`Operation failed after ${maxRetries} attempts: ${lastError?.message}`);
 };

@@ -61,21 +61,41 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
         return;
       }
       
-      // Step 2: If login successful, wait briefly before the subsequent processing
+      // Step 2: Ensure user profile exists before proceeding
       if (userData?.user) {
         try {
-          // Wait briefly before profile operations
-          await new Promise(resolve => setTimeout(resolve, 300));
+          console.log("Login successful, creating/checking profile...");
           
-          // Ensure profile exists before any other operations
-          const profileSuccess = await ensureUserProfile(userData.user.id, userData.user.email);
+          // Wait briefly before profile operations to ensure auth is complete
+          await new Promise(resolve => setTimeout(resolve, 500));
           
-          if (!profileSuccess) {
-            // Continue login process despite profile issues
-            console.warn("Profile verification had issues but continuing auth flow");
+          let profileSuccess = false;
+          const maxAttempts = 3;
+          
+          // Retry profile creation multiple times if necessary
+          for (let i = 0; i < maxAttempts; i++) {
+            try {
+              profileSuccess = await ensureUserProfile(userData.user.id, userData.user.email);
+              if (profileSuccess) {
+                console.log("Profile confirmed for user:", userData.user.id);
+                break;
+              }
+              
+              // Wait between retries
+              console.log(`Profile creation attempt ${i+1} didn't succeed, retrying...`);
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (err) {
+              console.error(`Profile creation attempt ${i+1} failed:`, err);
+              // Continue with retries
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
           }
           
-          // If we get here, login was successful
+          if (!profileSuccess) {
+            console.warn("Failed to create profile after multiple attempts, but continuing login flow");
+          }
+          
+          // If we get here, login was successful regardless of profile status
           toast({
             title: "Success!",
             description: "You are now logged in",
