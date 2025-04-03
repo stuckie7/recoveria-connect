@@ -77,7 +77,7 @@ const WelcomePage = () => {
       
       // If user is logged in, update their profile
       if (user) {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ 
             sobriety_start_date: startDate.toISOString(),
@@ -85,17 +85,27 @@ const WelcomePage = () => {
             onboarding_completed: true
           })
           .eq('id', user.id);
+          
+        if (error) {
+          console.error('Error updating profile:', error);
+          toast.error('Failed to save your information');
+          setLoading(false);
+          return;
+        }
       }
       
-      // Redirect to dashboard
-      navigate('/');
-      
-      // Show success message
+      // Show success message before redirecting
       toast.success('Welcome to your recovery journey!');
+      
+      // Add a small delay to ensure the toast is visible
+      setTimeout(() => {
+        // Redirect to dashboard
+        navigate('/');
+      }, 500);
+      
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('There was a problem saving your information');
-    } finally {
       setLoading(false);
     }
   };

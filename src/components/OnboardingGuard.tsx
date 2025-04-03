@@ -30,7 +30,7 @@ const OnboardingGuard = () => {
             .from('profiles')
             .select('*')  // Changed to select all columns to avoid type error
             .eq('id', user.id)
-            .single();
+            .maybeSingle();  // Use maybeSingle instead of single to avoid errors if no record exists
             
           if (error) {
             console.error('Error fetching onboarding status:', error);
@@ -38,7 +38,7 @@ const OnboardingGuard = () => {
             setOnboardingCompleted(false);
           } else {
             // Use data.onboarding_completed if it exists, otherwise default to false
-            setOnboardingCompleted(data?.onboarding_completed || false);
+            setOnboardingCompleted(data?.onboarding_completed ?? false);
           }
         } else {
           setOnboardingCompleted(false);
