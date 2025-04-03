@@ -1,12 +1,12 @@
 
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { ensureUserProfile } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
 import { performWithRetry } from '@/utils/retryUtil';
 
 /**
  * Service for handling user profile operations
- * Now simplified with database triggers handling presence records
+ * Now uses the shared ensureUserProfile function
  */
 export const userProfileService = {
   /**
@@ -17,62 +17,16 @@ export const userProfileService = {
     try {
       console.log(`Ensuring profile exists for user: ${user.id}`);
       
-      // Check if profile exists using retry mechanism
-      const profile = await performWithRetry(async () => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
+      // Use retry mechanism for better reliability
+      return await performWithRetry(async () => {
+        const success = await ensureUserProfile(user.id, user.email);
         
-        if (error) {
-          console.error('Error checking if profile exists:', error);
-          throw error;
+        if (!success) {
+          throw new Error('Failed to ensure profile exists');
         }
         
-        return data;
+        return success;
       }, 3);
-      
-      // Create profile if it doesn't exist (with retry)
-      if (!profile) {
-        console.log('Profile not found, creating one...');
-        
-        await performWithRetry(async () => {
-          const { error } = await supabase.from('profiles').insert({
-            id: user.id,
-            email: user.email,
-          });
-          
-          if (error) {
-            console.error('Error creating profile:', error);
-            throw error;
-          }
-          
-          return true;
-        }, 3);
-        
-        // Verify profile was created
-        const verifyResult = await performWithRetry(async () => {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .single();
-          
-          if (error) {
-            console.error('Error verifying profile creation:', error);
-            throw error;
-          }
-          
-          return data;
-        }, 3);
-        
-        console.log('Created and verified user profile for:', user.id);
-        return !!verifyResult;
-      } else {
-        console.log('Profile already exists for user:', user.id);
-        return true;
-      }
     } catch (error) {
       console.error('Error in profile verification after multiple retries:', error);
       toast({
