@@ -1,14 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Calendar, Award, BarChart, Sparkles } from 'lucide-react';
 import { UserProgress } from '@/types';
 import StatCard from './StatCard';
+import { verifyStreakIntegrity } from '@/utils/storage/userProgress/streaks';
 
 interface StatsCardsProps {
   progress: UserProgress;
 }
 
 const StatsCards: React.FC<StatsCardsProps> = ({ progress }) => {
+  // Verify streak integrity when component mounts
+  useEffect(() => {
+    verifyStreakIntegrity();
+  }, []);
+  
   // Calculate number of achieved milestones
   const achievedMilestones = progress.milestones.filter(m => m.achieved).length;
   const totalMilestones = progress.milestones.length;

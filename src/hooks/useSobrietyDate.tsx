@@ -17,12 +17,25 @@ export function useSobrietyDate() {
   // Update progress when it changes and calculate current streak
   useEffect(() => {
     try {
+      console.log('Initializing useSobrietyDate hook');
       // Get the latest progress
       const updatedProgress = getUserProgress();
       
-      // Calculate the current streak based on days between start date and today
+      // Ensure valid date - if not, set to today
       const startDate = new Date(updatedProgress.startDate);
+      if (isNaN(startDate.getTime())) {
+        console.warn('Invalid start date detected, resetting to today');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        updatedProgress.startDate = today.toISOString();
+        setSelectedDate(today);
+      } else {
+        setSelectedDate(startDate);
+      }
+      
+      // Calculate the current streak based on days between start date and today
       const currentStreak = daysBetween(startDate);
+      console.log('Current calculated streak:', currentStreak);
       
       // Update the current streak and total sober days in the progress object
       if (updatedProgress.currentStreak !== currentStreak || updatedProgress.totalDaysSober !== currentStreak) {
@@ -31,6 +44,7 @@ export function useSobrietyDate() {
         
         // Update longest streak if needed
         if (currentStreak > updatedProgress.longestStreak) {
+          console.log('Updating longest streak:', currentStreak);
           updatedProgress.longestStreak = currentStreak;
         }
         
@@ -54,6 +68,7 @@ export function useSobrietyDate() {
     
     const syncWithSupabase = async () => {
       try {
+        console.log('Syncing sobriety date with Supabase for user:', user.id);
         // Fetch the user's profile to get sobriety date
         const { data, error } = await supabase
           .from('profiles')
@@ -79,7 +94,25 @@ export function useSobrietyDate() {
             console.log('Updating local sobriety date from Supabase:', supabaseDate);
             setSobrietyStartDate(supabaseDate);
             setSelectedDate(supabaseDate);
-            setProgress(getUserProgress()); // Refresh progress with new date
+            
+            // Get fresh progress with updated date and streaks
+            const freshProgress = getUserProgress();
+            setProgress(freshProgress);
+            console.log('Updated progress with Supabase date:', freshProgress);
+          }
+        } else if (user && progress.startDate) {
+          // If no date in Supabase but we have a local date, save it to Supabase
+          console.log('No sobriety date in Supabase, saving local date');
+          const localDate = new Date(progress.startDate);
+          
+          if (!isNaN(localDate.getTime())) {
+            await supabase
+              .from('profiles')
+              .update({ 
+                sobriety_start_date: localDate.toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', user.id);
           }
         }
       } catch (err) {
@@ -88,7 +121,7 @@ export function useSobrietyDate() {
     };
     
     syncWithSupabase();
-  }, [user]);
+  }, [user, progress.startDate]);
   
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -97,6 +130,7 @@ export function useSobrietyDate() {
       const [year, month, day] = dateValue.split('-').map(Number);
       // Note: month is 0-indexed in JavaScript Date
       const date = new Date(year, month - 1, day);
+      console.log('Date selected:', date.toISOString());
       setSelectedDate(date);
     } catch (error) {
       console.error('Error handling date change:', error);
@@ -136,6 +170,8 @@ export function useSobrietyDate() {
         updatedProgress.longestStreak = currentStreak;
       }
       
+      // Save updated progress
+      localStorage.setItem('recovery-app-progress', JSON.stringify(updatedProgress));
       setProgress(updatedProgress);
       
       // If user is logged in, also update Supabase

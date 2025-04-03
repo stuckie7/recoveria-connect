@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { useSobrietyDate } from '@/hooks/useSobrietyDate';
+import { verifyStreakIntegrity } from '@/utils/storage/userProgress/streaks';
 
 // Helper function to create streak data for visualization
 const createStreakData = (currentStreak: number, longestStreak: number) => {
@@ -14,7 +15,18 @@ const createStreakData = (currentStreak: number, longestStreak: number) => {
 
 const StreakChart: React.FC = () => {
   const { progress } = useSobrietyDate();
-  const streakData = createStreakData(progress.currentStreak, progress.longestStreak);
+  const [streakData, setStreakData] = useState(() => 
+    createStreakData(progress.currentStreak, progress.longestStreak)
+  );
+  
+  // Update chart data when progress changes
+  useEffect(() => {
+    // Verify streak integrity to ensure data is accurate
+    verifyStreakIntegrity();
+    
+    // Update streak data
+    setStreakData(createStreakData(progress.currentStreak, progress.longestStreak));
+  }, [progress]);
   
   const chartConfig = {
     current: { color: "#1E88E5" },
@@ -34,6 +46,7 @@ const StreakChart: React.FC = () => {
             <YAxis 
               label={{ value: 'Days', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
               allowDecimals={false}
+              domain={[0, 'dataMax + 5']} // Add some padding at the top
             />
             <Tooltip 
               formatter={(value: number) => [`${value} days`, 'Duration']}

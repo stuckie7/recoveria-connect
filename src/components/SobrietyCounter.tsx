@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock, Calendar } from 'lucide-react';
-import { getUserProgress, updateStreak } from '@/utils/storage';
+import { getUserProgress, updateStreak, verifyStreakIntegrity } from '@/utils/storage';
 import { daysBetween, getNextMilestoneDate, getMilestoneDescription, MILESTONE_DAYS } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 
@@ -13,11 +13,22 @@ const SobrietyCounter: React.FC = () => {
   const [nextMilestone, setNextMilestone] = useState<{ days: number; date: Date; } | null>(null);
   
   useEffect(() => {
-    // Get user progress from local storage and ensure streak is updated
+    // Get user progress from local storage and ensure streak is accurate
+    verifyStreakIntegrity();
     updateStreak();
+    
     const progress = getUserProgress();
     const start = new Date(progress.startDate);
-    setStartDate(start);
+    
+    // Verify the date is valid
+    if (isNaN(start.getTime())) {
+      console.error('Invalid start date in SobrietyCounter');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      setStartDate(today);
+    } else {
+      setStartDate(start);
+    }
     
     // Calculate initial values
     updateCounters(start);
@@ -31,6 +42,12 @@ const SobrietyCounter: React.FC = () => {
   }, []);
   
   const updateCounters = (start: Date) => {
+    // Skip update if date is invalid
+    if (isNaN(start.getTime())) {
+      console.error('Invalid date in updateCounters');
+      return;
+    }
+    
     const now = new Date();
     
     // Make a copy of the start date to ensure we don't modify the original
@@ -83,7 +100,7 @@ const SobrietyCounter: React.FC = () => {
   return (
     <div className="w-full neo-card overflow-hidden animate-fade-in">
       <div className="text-center mb-4">
-        <h2 className="text-xl font-medium text-muted-foreground">Since using this app</h2>
+        <h2 className="text-xl font-medium text-muted-foreground">Since your sobriety date</h2>
         <h3 className="text-lg font-medium text-muted-foreground">You've been sober for</h3>
       </div>
       
