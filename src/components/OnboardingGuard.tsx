@@ -28,7 +28,7 @@ const OnboardingGuard = () => {
         if (user) {
           const { data, error } = await supabase
             .from('profiles')
-            .select('onboarding_completed')
+            .select('*')  // Changed to select all columns to avoid type error
             .eq('id', user.id)
             .single();
             
@@ -37,6 +37,7 @@ const OnboardingGuard = () => {
             // Default to not completed in case of error
             setOnboardingCompleted(false);
           } else {
+            // Use data.onboarding_completed if it exists, otherwise default to false
             setOnboardingCompleted(data?.onboarding_completed || false);
           }
         } else {

@@ -35,7 +35,7 @@ const WelcomePage = () => {
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('onboarding_completed')
+            .select('*')  // Changed to select all columns to avoid type error
             .eq('id', user.id)
             .single();
             
@@ -80,9 +80,9 @@ const WelcomePage = () => {
         await supabase
           .from('profiles')
           .update({ 
-            onboarding_completed: true,
+            sobriety_start_date: startDate.toISOString(),
             addiction_type: addiction || null,
-            sobriety_start_date: startDate.toISOString()
+            onboarding_completed: true
           })
           .eq('id', user.id);
       }
