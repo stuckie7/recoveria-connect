@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 /**
  * Component that redirects users to the welcome page if they haven't completed onboarding
@@ -19,6 +20,7 @@ const OnboardingGuard = () => {
         const localOnboardingCompleted = localStorage.getItem('onboarding-completed') === 'true';
         
         if (localOnboardingCompleted) {
+          console.log('Onboarding completed according to local storage');
           setOnboardingCompleted(true);
           setLoading(false);
           return;
@@ -26,27 +28,39 @@ const OnboardingGuard = () => {
         
         // For authenticated users, check their profile
         if (user) {
+          console.log('Checking onboarding status for user:', user.id);
+          
           const { data, error } = await supabase
             .from('profiles')
-            .select('*')  // Changed to select all columns to avoid type error
+            .select('onboarding_completed')
             .eq('id', user.id)
-            .maybeSingle();  // Use maybeSingle instead of single to avoid errors if no record exists
+            .maybeSingle();
             
           if (error) {
             console.error('Error fetching onboarding status:', error);
             // Default to not completed in case of error
             setOnboardingCompleted(false);
           } else {
-            // Use data.onboarding_completed if it exists, otherwise default to false
-            setOnboardingCompleted(data?.onboarding_completed ?? false);
+            // Use nullish coalescing to handle potentially undefined onboarding_completed
+            const completed = data?.onboarding_completed ?? false;
+            console.log('Profile data found, onboarding_completed:', completed);
+            
+            // If completed in database, also set in localStorage for faster checks
+            if (completed) {
+              localStorage.setItem('onboarding-completed', 'true');
+            }
+            
+            setOnboardingCompleted(completed);
           }
         } else {
+          console.log('No user found, onboarding not completed');
           setOnboardingCompleted(false);
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);
         // Default to not completed in case of error
         setOnboardingCompleted(false);
+        toast.error('Error checking your setup status');
       } finally {
         setLoading(false);
       }
@@ -63,6 +77,7 @@ const OnboardingGuard = () => {
     );
   }
 
+  // If onboarding is not completed, redirect to welcome page
   return onboardingCompleted ? <Outlet /> : <Navigate to="/welcome" replace />;
 };
 

@@ -11,6 +11,7 @@ interface DatePickerProps {
   handleDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleSaveDate: () => void;
   setIsOpen: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({
@@ -18,7 +19,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
   selectedDate,
   handleDateChange,
   handleSaveDate,
-  setIsOpen
+  setIsOpen,
+  isLoading = false
 }) => {
   if (!isOpen) return null;
   
@@ -45,19 +47,26 @@ const DatePicker: React.FC<DatePickerProps> = ({
         value={formatDateForInput(selectedDate)}
         onChange={handleDateChange}
         max={formatDateForInput(today)}
+        disabled={isLoading}
       />
       <div className="flex justify-end space-x-2">
         <button 
           onClick={() => setIsOpen(false)}
           className="px-3 py-1.5 text-sm rounded-lg bg-muted-foreground/10"
+          disabled={isLoading}
         >
           Cancel
         </button>
         <button 
           onClick={handleSaveDate}
-          className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white"
+          className="px-3 py-1.5 text-sm rounded-lg bg-primary text-white flex items-center justify-center min-w-[60px]"
+          disabled={isLoading}
         >
-          Save
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            'Save'
+          )}
         </button>
       </div>
     </div>
