@@ -1,4 +1,3 @@
-
 import { User } from '@supabase/supabase-js';
 import { useState } from 'react';
 import { supabase, ensureUserProfile } from '@/integrations/supabase/client';
@@ -33,31 +32,31 @@ export const useUserPresence = () => {
       
       console.log('Profile confirmed to exist, now updating presence...');
       
-      // Important: Add a delay to ensure the profile has been created in the database
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Important: Add a longer delay to ensure the profile has been created in the database
+      // Increasing from 1000ms to 2000ms
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Verify profile exists one more time before attempting presence update
+      const { data: finalVerifyData, error: finalVerifyError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+        
+      if (finalVerifyError || !finalVerifyData) {
+        console.error('Final profile verification failed before presence update:', finalVerifyError);
+        return false;
+      }
       
       // Retry the presence update if it fails initially
       let success = false;
       let attempts = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 5; // Increased from 3 to 5
       
       while (!success && attempts < maxAttempts) {
         attempts++;
         
         try {
-          // First verify profile still exists
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', userId)
-            .single();
-            
-          if (verifyError || !verifyData) {
-            console.error('Profile verification failed before presence update:', verifyError);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            continue;
-          }
-        
           const { error: presenceError } = await supabase.from('user_presence').upsert({
             id: userId,
             is_online: isOnline,
@@ -66,15 +65,15 @@ export const useUserPresence = () => {
           
           if (presenceError) {
             console.error(`Error updating user presence (attempt ${attempts}):`, presenceError);
-            // Wait before retrying
-            await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+            // Wait before retrying with longer delay
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
           } else {
             console.log(`User presence updated: ${userId} is ${isOnline ? 'online' : 'offline'}`);
             success = true;
           }
         } catch (e) {
           console.error(`Failed attempt ${attempts} to update presence:`, e);
-          await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
         }
       }
       
