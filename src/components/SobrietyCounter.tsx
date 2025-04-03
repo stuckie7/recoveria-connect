@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const SobrietyCounter: React.FC = () => {
   const [days, setDays] = useState<number>(0);
@@ -64,12 +65,11 @@ const SobrietyCounter: React.FC = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         setStartDate(today);
+        updateCounters(today);
       } else {
         setStartDate(start);
+        updateCounters(start);
       }
-      
-      // Calculate initial values
-      updateCounters(start);
     };
     
     fetchSobrietyDate();
@@ -79,7 +79,9 @@ const SobrietyCounter: React.FC = () => {
     
     // Update counters every minute
     const interval = setInterval(() => {
-      updateCounters(startDate);
+      if (startDate) {
+        updateCounters(startDate);
+      }
     }, 60000); // Every minute
     
     return () => clearInterval(interval);
@@ -155,6 +157,19 @@ const SobrietyCounter: React.FC = () => {
     );
   };
 
+  const handleCelebrateClick = () => {
+    setAnimateDigits(false);
+    
+    // Reset the animation after a small delay
+    setTimeout(() => {
+      setAnimateDigits(true);
+    }, 50);
+    
+    toast.success("Congratulations on your progress!", {
+      description: `You've been sober for ${days} days. Keep going!`
+    });
+  };
+
   return (
     <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-recovery-neutral-lightest to-recovery-blue-light">
       <CardHeader className="pb-2">
@@ -162,7 +177,7 @@ const SobrietyCounter: React.FC = () => {
           Your Sobriety Journey
         </CardTitle>
         <CardDescription className="text-center text-lg">
-          {startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          Since {startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </CardDescription>
       </CardHeader>
       
@@ -224,7 +239,7 @@ const SobrietyCounter: React.FC = () => {
           <div className="mt-6 text-center">
             <Button 
               className="bg-gradient-to-r from-recovery-blue-dark to-recovery-purple-dark hover:opacity-90 transition-all"
-              onClick={() => setAnimateDigits(prev => !prev)}
+              onClick={handleCelebrateClick}
             >
               Celebrate Progress
             </Button>
