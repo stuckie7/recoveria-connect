@@ -1,9 +1,14 @@
+// Solution for sober date integration
+// This modified version of SobrietyCounter.tsx integrates with the user's profile data
+// to ensure the counter uses the sobriety date from onboarding
 
 import React, { useState, useEffect } from 'react';
 import { Clock, Calendar } from 'lucide-react';
-import { getUserProgress, updateStreak, verifyStreakIntegrity } from '@/utils/storage';
+import { getUserProgress, updateStreak, verifyStreakIntegrity, setSobrietyStartDate } from '@/utils/storage';
 import { daysBetween, getNextMilestoneDate, getMilestoneDescription, MILESTONE_DAYS } from '@/utils/dates';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const SobrietyCounter: React.FC = () => {
   const [days, setDays] = useState<number>(0);
@@ -11,35 +16,70 @@ const SobrietyCounter: React.FC = () => {
   const [minutes, setMinutes] = useState<number>(0);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [nextMilestone, setNextMilestone] = useState<{ days: number; date: Date; } | null>(null);
+  const { user } = useAuth();
   
   useEffect(() => {
-    // Get user progress from local storage and ensure streak is accurate
-    verifyStreakIntegrity();
-    updateStreak();
+    const fetchSobrietyDate = async () => {
+      // First check if user is authenticated
+      if (user) {
+        try {
+          // Fetch sobriety date from user profile
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('sobriety_start_date')
+            .eq('id', user.id)
+            .single();
+            
+          if (error) {
+            console.error('Error fetching sobriety date from profile:', error);
+          } else if (data && data.sobriety_start_date) {
+            console.log('Using sobriety date from profile:', data.sobriety_start_date);
+            
+            // Update local storage to match profile data
+            const profileDate = new Date(data.sobriety_start_date);
+            if (!isNaN(profileDate.getTime())) {
+              // Update local storage with the date from profile
+              setSobrietyStartDate(profileDate);
+              setStartDate(profileDate);
+              updateCounters(profileDate);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('Error in fetchSobrietyDate:', err);
+        }
+      }
+      
+      // Fallback to local storage if no user or error fetching profile
+      verifyStreakIntegrity();
+      updateStreak();
+      
+      const progress = getUserProgress();
+      const start = new Date(progress.startDate);
+      
+      // Verify the date is valid
+      if (isNaN(start.getTime())) {
+        console.error('Invalid start date in SobrietyCounter');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        setStartDate(today);
+      } else {
+        setStartDate(start);
+      }
+      
+      // Calculate initial values
+      updateCounters(start);
+    };
     
-    const progress = getUserProgress();
-    const start = new Date(progress.startDate);
-    
-    // Verify the date is valid
-    if (isNaN(start.getTime())) {
-      console.error('Invalid start date in SobrietyCounter');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      setStartDate(today);
-    } else {
-      setStartDate(start);
-    }
-    
-    // Calculate initial values
-    updateCounters(start);
+    fetchSobrietyDate();
     
     // Update counters every minute
     const interval = setInterval(() => {
-      updateCounters(start);
+      updateCounters(startDate);
     }, 60000); // Every minute
     
     return () => clearInterval(interval);
-  }, []);
+  }, [user]); // Re-run when user changes
   
   const updateCounters = (start: Date) => {
     // Skip update if date is invalid
