@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,14 +76,39 @@ export const useSession = () => {
       try {
         console.log("Ensuring user profile exists...");
         // First ensure profile exists
-        await userProfileService.ensureUserProfile(session.user);
+        const profileCreated = await userProfileService.ensureUserProfile(session.user);
         
-        // Add a delay to ensure profile is fully created
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!profileCreated) {
+          console.error("Failed to create or verify user profile");
+          toast({
+            title: "Profile Error",
+            description: "There was a problem with your profile setup. Please try logging in again.",
+            variant: "destructive",
+          });
+          // Force sign out if profile creation fails
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Add a longer delay to ensure profile is fully created
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         console.log("Setting user online status...");
         // Then set user online status
-        await setUserOnline(session.user);
+        const presenceUpdated = await setUserOnline(session.user);
+        
+        if (!presenceUpdated) {
+          console.warn("Failed to update user presence, but continuing session");
+          // Don't fail the entire login process for presence issues
+          toast({
+            title: "Online Status Warning",
+            description: "Unable to update your online status. Some social features may be limited.",
+            variant: "warning",
+          });
+        }
       } catch (error) {
         console.error('Error in profile management:', error);
         toast({
