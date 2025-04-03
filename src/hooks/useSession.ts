@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,11 +72,11 @@ export const useSession = () => {
       }
     };
 
-    // Extracted session handling logic
+    // Extracted session handling logic - simplified now that we use DB triggers
     const handleUserSession = async (session: Session) => {
       try {
         console.log("Ensuring user profile exists...");
-        // First ensure profile exists
+        // First ensure profile exists - our trigger will handle user_presence
         const profileCreated = await userProfileService.ensureUserProfile(session.user);
         
         if (!profileCreated) {
@@ -93,22 +94,11 @@ export const useSession = () => {
           return;
         }
         
-        // Add a longer delay to ensure profile is fully created
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
         console.log("Setting user online status...");
-        // Then set user online status
-        const presenceUpdated = await setUserOnline(session.user);
-        
-        if (!presenceUpdated) {
-          console.warn("Failed to update user presence, but continuing session");
-          // Don't fail the entire login process for presence issues
-          toast({
-            title: "Online Status Warning",
-            description: "Unable to update your online status. Some social features may be limited.",
-            variant: "warning",
-          });
-        }
+        // Update online status - not critical to login flow now that we have triggers
+        setUserOnline(session.user).catch(err => {
+          console.warn("Failed to set user online, but continuing session:", err);
+        });
       } catch (error) {
         console.error('Error in profile management:', error);
         toast({

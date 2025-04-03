@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
@@ -5,10 +6,12 @@ import { performWithRetry } from '@/utils/retryUtil';
 
 /**
  * Service for handling user profile operations
+ * Now simplified with database triggers handling presence records
  */
 export const userProfileService = {
   /**
    * Ensures a user profile exists for the given user
+   * The database trigger will automatically create a presence record
    */
   ensureUserProfile: async (user: User): Promise<boolean> => {
     try {
@@ -34,17 +37,6 @@ export const userProfileService = {
       if (!profile) {
         console.log('Profile not found, creating one...');
         
-        // First check if there are any existing transactions that might be causing issues
-        await performWithRetry(async () => {
-          // Execute a simple query to check database connection and reset any aborted transactions
-          const { error } = await supabase.rpc('get_active_users_count');
-          if (error) {
-            console.error('Error checking database connection:', error);
-            throw error;
-          }
-          return true;
-        }, 3);
-        
         await performWithRetry(async () => {
           const { error } = await supabase.from('profiles').insert({
             id: user.id,
@@ -57,12 +49,9 @@ export const userProfileService = {
           }
           
           return true;
-        }, 5);
+        }, 3);
         
-        // Wait longer for profile creation to be processed
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Verify profile was created with more retries
+        // Verify profile was created
         const verifyResult = await performWithRetry(async () => {
           const { data, error } = await supabase
             .from('profiles')
@@ -75,12 +64,8 @@ export const userProfileService = {
             throw error;
           }
           
-          if (!data) {
-            throw new Error('Profile was not created successfully');
-          }
-          
           return data;
-        }, 5);
+        }, 3);
         
         console.log('Created and verified user profile for:', user.id);
         return !!verifyResult;
