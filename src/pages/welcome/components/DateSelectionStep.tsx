@@ -6,12 +6,14 @@ interface DateSelectionStepProps {
   startDate: Date;
   handleDateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleContinue: () => void;
+  loading?: boolean;
 }
 
 const DateSelectionStep: React.FC<DateSelectionStepProps> = ({
   startDate,
   handleDateChange,
-  handleContinue
+  handleContinue,
+  loading = false
 }) => {
   return (
     <div className="glass-card p-8 animate-fade-in">
@@ -30,6 +32,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({
           onChange={handleDateChange}
           max={new Date().toISOString().split('T')[0]}
           className="neo-input w-full"
+          disabled={loading}
         />
         <p className="mt-2 text-sm text-muted-foreground">
           This is the first day you became sober.
@@ -38,10 +41,20 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({
       
       <button
         onClick={handleContinue}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium flex items-center justify-center shadow-lg hover:opacity-90 transition-all"
+        disabled={loading}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium flex items-center justify-center shadow-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Continue
-        <ArrowRight size={18} className="ml-2" />
+        {loading ? (
+          <>
+            <span className="mr-2">Processing</span>
+            <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+          </>
+        ) : (
+          <>
+            Continue
+            <ArrowRight size={18} className="ml-2" />
+          </>
+        )}
       </button>
     </div>
   );

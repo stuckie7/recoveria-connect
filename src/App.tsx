@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import EmergencySupport from "./components/EmergencySupport";
 import PrivateRoute from "./components/PrivateRoute";
+import OnboardingGuard from "./components/OnboardingGuard";
 import WelcomePage from "./pages/welcome/WelcomePage";
 import Dashboard from "./pages/Dashboard";
 import Community from "./pages/Community";
