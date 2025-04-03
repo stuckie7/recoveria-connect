@@ -1,12 +1,11 @@
 
 import { User } from '@supabase/supabase-js';
-import { ensureUserProfile } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
 import { performWithRetry } from '@/utils/retryUtil';
 
 /**
  * Service for handling user profile operations
- * Now uses the shared ensureUserProfile function
  */
 export const userProfileService = {
   /**
@@ -19,13 +18,41 @@ export const userProfileService = {
       
       // Use retry mechanism for better reliability
       return await performWithRetry(async () => {
-        const success = await ensureUserProfile(user.id, user.email);
+        // First check if profile exists
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
         
-        if (!success) {
-          throw new Error('Failed to ensure profile exists');
+        if (profileError) {
+          console.error('Error checking for profile:', profileError);
+          return false;
         }
         
-        return success;
+        // If no profile found, create one
+        if (!profile) {
+          console.log('Profile not found, creating one...');
+          
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              email: user.email,
+              onboarding_completed: false
+            });
+          
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+            return false;
+          }
+          
+          console.log('Created profile for:', user.id);
+        } else {
+          console.log('Profile already exists for user:', user.id);
+        }
+        
+        return true;
       }, 3);
     } catch (error) {
       console.error('Error in profile verification after multiple retries:', error);

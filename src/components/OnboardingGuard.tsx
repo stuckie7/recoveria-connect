@@ -32,9 +32,13 @@ const OnboardingGuard = () => {
             .eq('id', user.id)
             .single();
             
-          if (error) throw error;
-          
-          setOnboardingCompleted(data?.onboarding_completed || false);
+          if (error) {
+            console.error('Error fetching onboarding status:', error);
+            // Default to not completed in case of error
+            setOnboardingCompleted(false);
+          } else {
+            setOnboardingCompleted(data?.onboarding_completed || false);
+          }
         } else {
           setOnboardingCompleted(false);
         }

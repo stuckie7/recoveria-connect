@@ -178,6 +178,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          addiction_type: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -187,7 +188,9 @@ export type Database = {
           is_premium: boolean | null
           location: string | null
           occupation: string | null
+          onboarding_completed: boolean | null
           recovery_data: Json | null
+          sobriety_start_date: string | null
           stripe_customer_id: string | null
           subscription_id: string | null
           subscription_plan: string | null
@@ -196,6 +199,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          addiction_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -205,7 +209,9 @@ export type Database = {
           is_premium?: boolean | null
           location?: string | null
           occupation?: string | null
+          onboarding_completed?: boolean | null
           recovery_data?: Json | null
+          sobriety_start_date?: string | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
           subscription_plan?: string | null
@@ -214,6 +220,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          addiction_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -223,7 +230,9 @@ export type Database = {
           is_premium?: boolean | null
           location?: string | null
           occupation?: string | null
+          onboarding_completed?: boolean | null
           recovery_data?: Json | null
+          sobriety_start_date?: string | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
           subscription_plan?: string | null
