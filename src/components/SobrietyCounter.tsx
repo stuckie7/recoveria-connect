@@ -1,14 +1,14 @@
-// Solution for sober date integration
-// This modified version of SobrietyCounter.tsx integrates with the user's profile data
-// to ensure the counter uses the sobriety date from onboarding
 
+// Modern redesigned Sobriety Counter component
 import React, { useState, useEffect } from 'react';
-import { Clock, Calendar } from 'lucide-react';
+import { Clock, Calendar, Award, TrendingUp } from 'lucide-react';
 import { getUserProgress, updateStreak, verifyStreakIntegrity, setSobrietyStartDate } from '@/utils/storage';
 import { daysBetween, getNextMilestoneDate, getMilestoneDescription, MILESTONE_DAYS } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const SobrietyCounter: React.FC = () => {
   const [days, setDays] = useState<number>(0);
@@ -16,6 +16,7 @@ const SobrietyCounter: React.FC = () => {
   const [minutes, setMinutes] = useState<number>(0);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [nextMilestone, setNextMilestone] = useState<{ days: number; date: Date; } | null>(null);
+  const [animateDigits, setAnimateDigits] = useState(false);
   const { user } = useAuth();
   
   useEffect(() => {
@@ -73,6 +74,9 @@ const SobrietyCounter: React.FC = () => {
     
     fetchSobrietyDate();
     
+    // Trigger digit animation on load
+    setTimeout(() => setAnimateDigits(true), 100);
+    
     // Update counters every minute
     const interval = setInterval(() => {
       updateCounters(startDate);
@@ -118,88 +122,116 @@ const SobrietyCounter: React.FC = () => {
     
     setNextMilestone(nextMilestoneObj);
   };
-  
-  // Create digit spans for animation
-  const createDigitSpans = (value: number, padLength: number = 2) => {
-    const paddedValue = value.toString().padStart(padLength, '0');
-    return paddedValue.split('').map((digit, index) => (
-      <span 
-        key={`digit-${index}-${value}`}
-        className={cn(
-          "inline-block w-12 h-16 md:w-16 md:h-20 rounded-lg shadow-neo flex items-center justify-center mx-0.5 overflow-hidden relative",
-          "bg-gradient-to-r from-recovery-blue-light to-recovery-green-light"
-        )}
-      >
-        <span className="text-2xl md:text-4xl font-semibold animate-scale-in">
-          {digit}
-        </span>
-      </span>
-    ));
+
+  // Format a digit with leading zero if needed
+  const formatDigit = (value: number, padLength: number = 2) => {
+    return value.toString().padStart(padLength, '0');
   };
   
+  // Create digit elements for the counter
+  const createDigits = (value: number, padLength: number = 2) => {
+    const digits = formatDigit(value, padLength).split('');
+    
+    return (
+      <div className="flex items-center justify-center">
+        {digits.map((digit, index) => (
+          <div 
+            key={`digit-${index}`}
+            className={cn(
+              "relative w-14 h-20 mx-0.5 rounded-lg overflow-hidden",
+              "bg-gradient-to-br from-recovery-blue-dark to-recovery-purple-dark",
+              "shadow-lg border border-white/10 backdrop-blur-sm",
+              animateDigits ? "animate-scale-in" : "opacity-0"
+            )}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
+              {digit}
+            </span>
+            <span className="absolute inset-0 bg-white/5 flex items-center justify-center"></span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="w-full neo-card overflow-hidden animate-fade-in">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-medium text-muted-foreground">Since your sobriety date</h2>
-        <h3 className="text-lg font-medium text-muted-foreground">You've been sober for</h3>
-      </div>
+    <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-recovery-neutral-lightest to-recovery-blue-light">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-center text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-recovery-blue-dark to-recovery-purple-dark">
+          Your Sobriety Journey
+        </CardTitle>
+        <CardDescription className="text-center text-lg">
+          {startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        </CardDescription>
+      </CardHeader>
       
-      <div className="flex flex-col items-center">
-        {/* Days counter */}
-        <div className="text-center mb-6">
-          <div className="flex justify-center items-center mb-2">
-            {createDigitSpans(days, days >= 100 ? 3 : days >= 10 ? 2 : 1)}
+      <CardContent>
+        <div className="rounded-xl bg-white/50 backdrop-blur-sm p-6 border border-white/20 shadow-inner">
+          <div className="flex flex-col items-center">
+            {/* Days counter */}
+            <div className="mb-6 text-center">
+              <div className="text-lg text-gray-600 mb-2 font-medium flex items-center justify-center">
+                <Award size={18} className="mr-2 text-recovery-purple-dark" />
+                <span>Days Sober</span>
+              </div>
+              {createDigits(days, days >= 100 ? 3 : days >= 10 ? 2 : 1)}
+            </div>
+            
+            {/* Hours and minutes */}
+            <div className="grid grid-cols-2 gap-8 w-full mb-6">
+              <div className="text-center">
+                <div className="text-md text-gray-600 mb-2 font-medium flex items-center justify-center">
+                  <Clock size={16} className="mr-1 text-recovery-blue-dark" />
+                  <span>Hours</span>
+                </div>
+                {createDigits(hours)}
+              </div>
+              
+              <div className="text-center">
+                <div className="text-md text-gray-600 mb-2 font-medium flex items-center justify-center">
+                  <Clock size={16} className="mr-1 text-recovery-blue-dark" />
+                  <span>Minutes</span>
+                </div>
+                {createDigits(minutes)}
+              </div>
+            </div>
           </div>
-          <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
-            Days
-          </span>
-        </div>
         
-        {/* Hours and minutes */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-xs mb-6">
-          <div className="text-center">
-            <div className="flex justify-center">
-              {createDigitSpans(hours)}
+          {/* Next milestone */}
+          {nextMilestone && (
+            <div className="mt-6 rounded-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-recovery-purple-light to-recovery-blue-light p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <TrendingUp size={16} className="mr-2 text-recovery-purple-dark" />
+                  <h3 className="text-sm font-medium text-recovery-purple-dark">Next Milestone</h3>
+                </div>
+                <p className="text-xl font-bold text-recovery-purple-dark">{getMilestoneDescription(nextMilestone.days)}</p>
+                <div className="flex items-center justify-center mt-2 text-sm text-recovery-blue-dark">
+                  <Calendar size={14} className="mr-1" />
+                  <span>
+                    {nextMilestone.date.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: nextMilestone.date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                    })}
+                  </span>
+                </div>
+              </div>
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center justify-center mt-1">
-              <Clock size={14} className="mr-1" />
-              Hours
-            </span>
-          </div>
+          )}
           
-          <div className="text-center">
-            <div className="flex justify-center">
-              {createDigitSpans(minutes)}
-            </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center justify-center mt-1">
-              <Clock size={14} className="mr-1" />
-              Minutes
-            </span>
+          <div className="mt-6 text-center">
+            <Button 
+              className="bg-gradient-to-r from-recovery-blue-dark to-recovery-purple-dark hover:opacity-90 transition-all"
+              onClick={() => setAnimateDigits(prev => !prev)}
+            >
+              Celebrate Progress
+            </Button>
           </div>
         </div>
-      </div>
-      
-      {/* Next milestone */}
-      {nextMilestone && (
-        <div className={cn(
-          "rounded-xl p-4 text-center mt-4",
-          "bg-gradient-to-r from-recovery-blue-light to-recovery-green-light"
-        )}>
-          <h3 className="text-sm font-medium text-gray-700 mb-1">Next milestone</h3>
-          <p className="text-xl font-semibold">{getMilestoneDescription(nextMilestone.days)}</p>
-          <div className="flex items-center justify-center mt-2 text-sm text-gray-600">
-            <Calendar size={14} className="mr-1" />
-            <span>
-              {nextMilestone.date.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: nextMilestone.date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-              })}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
