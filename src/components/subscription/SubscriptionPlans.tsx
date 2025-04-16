@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +8,16 @@ import { toast } from 'sonner';
 
 const SubscriptionPlans: React.FC = () => {
   const { user } = useAuth();
-  const { plans, subscription, isPremium, isLoading, subscribe, manageSubscription } = useSubscription();
+  const { 
+    plans, 
+    subscription, 
+    isPremium, 
+    isLoading, 
+    isRefreshing,
+    subscribe, 
+    manageSubscription,
+    refreshSubscription 
+  } = useSubscription();
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
@@ -42,6 +51,11 @@ const SubscriptionPlans: React.FC = () => {
     }
   };
 
+  const handleRefreshSubscription = () => {
+    refreshSubscription();
+    toast.info('Refreshing subscription status...');
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[300px]">
@@ -52,11 +66,23 @@ const SubscriptionPlans: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold">Subscription Plans</h2>
-        <p className="text-muted-foreground">
-          Choose the plan that best fits your recovery journey
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Subscription Plans</h2>
+          <p className="text-muted-foreground">
+            Choose the plan that best fits your recovery journey
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleRefreshSubscription}
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {subscription && (
@@ -139,6 +165,12 @@ const SubscriptionPlans: React.FC = () => {
                     ? (isPremium ? 'Downgrade to Free' : 'Free Plan') 
                     : 'Subscribe'}
               </Button>
+              
+              {plan.stripe_price_id && (
+                <p className="mt-2 text-xs text-muted-foreground text-center">
+                  Live Mode Price: {plan.stripe_price_id}
+                </p>
+              )}
             </div>
           );
         })}

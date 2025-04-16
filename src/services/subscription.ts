@@ -38,21 +38,34 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
       let features: string[] = [];
       
       if (plan.features) {
-        // Try to extract features array from different possible formats
-        if (typeof plan.features === 'object') {
-          if (Array.isArray(plan.features)) {
-            // If features is already an array
-            features = plan.features as string[];
-          } else if (plan.features.features && Array.isArray(plan.features.features)) {
-            // If features is in a nested "features" property
-            features = plan.features.features as string[];
+        try {
+          // Try to extract features array from different possible formats
+          if (typeof plan.features === 'string') {
+            // If features is a JSON string, parse it
+            const parsed = JSON.parse(plan.features);
+            if (Array.isArray(parsed)) {
+              features = parsed;
+            } else if (parsed.features && Array.isArray(parsed.features)) {
+              features = parsed.features;
+            }
+          } else if (typeof plan.features === 'object') {
+            if (Array.isArray(plan.features)) {
+              // If features is already an array
+              features = plan.features as string[];
+            } else if (plan.features.features && Array.isArray(plan.features.features)) {
+              // If features is in a nested "features" property
+              features = plan.features.features as string[];
+            }
           }
+        } catch (e) {
+          console.warn('Error parsing plan features:', e);
+          // Default to empty array if parsing fails
         }
       }
       
       return {
         ...plan,
-        features
+        features: features.length ? features : ['Basic access']
       };
     });
   } catch (error) {
