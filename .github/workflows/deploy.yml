@@ -1,3 +1,4 @@
+
 name: Deploy
 on:
   push:
@@ -37,8 +38,7 @@ jobs:
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
-          project: "addictionrecoveryapp"
+          project: ${{ secrets.DENO_PROJECT_NAME || 'addictionrecoveryapp' }}
           entrypoint: "jsr:@deno/nextjs-start"
           root: "."
           include: .next, public
-          
