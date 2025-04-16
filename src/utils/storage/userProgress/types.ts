@@ -32,13 +32,15 @@ export interface UserPresenceRelationship {
   referencedColumns: string[];
 }
 
+// Import the initialization function directly
+import { initializeUserProgress } from './initialize';
+
 // Get user progress from localStorage
 export const getUserProgress = (): UserProgress => {
   const storedProgress = localStorage.getItem(STORAGE_KEYS.USER_PROGRESS);
   
   if (!storedProgress) {
     // If no progress exists, initialize with defaults
-    const { initializeUserProgress } = require('./initialize');
     const initialProgress = initializeUserProgress();
     saveUserProgress(initialProgress);
     return initialProgress;
@@ -49,7 +51,6 @@ export const getUserProgress = (): UserProgress => {
   } catch (error) {
     console.error('Error parsing user progress:', error);
     // Return default progress if parsing fails
-    const { initializeUserProgress } = require('./initialize');
     const initialProgress = initializeUserProgress();
     saveUserProgress(initialProgress);
     return initialProgress;

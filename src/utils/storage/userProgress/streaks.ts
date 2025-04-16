@@ -5,6 +5,7 @@
 
 import { daysBetween } from '../../dates';
 import { getUserProgress, saveUserProgress } from './types';
+import { generateMonthlyMilestones } from './milestones';
 
 /**
  * Update streak count
@@ -64,7 +65,7 @@ export const updateStreak = () => {
   
   if (monthsCompleted > highestMonthMilestone) {
     console.log('Generating new monthly milestones based on current streak:', currentDays);
-    const { generateMonthlyMilestones } = require('./milestones');
+    // Use imported function instead of require
     const newMilestones = generateMonthlyMilestones(currentDays);
     progress.milestones = newMilestones;
     milestonesUpdated = true;

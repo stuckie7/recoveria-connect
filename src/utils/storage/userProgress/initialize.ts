@@ -4,9 +4,10 @@
  */
 
 import { DEFAULT_MILESTONES } from '../constants';
-import { getUserProgress, saveUserProgress } from './types';
+import { saveUserProgress } from './types';
 import { generateMonthlyMilestones } from './milestones';
 import { daysBetween } from '../../dates';
+import { UserProgress } from '@/types';
 
 /**
  * Initialize user progress with default values
@@ -28,6 +29,8 @@ export const initializeUserProgress = () => {
  * Set sobriety start date
  */
 export const setSobrietyStartDate = (date: Date) => {
+  // Import getUserProgress directly to avoid circular imports
+  const { getUserProgress } = require('./types');
   const progress = getUserProgress();
   
   const normalizedDate = new Date(date);
@@ -49,6 +52,8 @@ export const setSobrietyStartDate = (date: Date) => {
  * Record a relapse
  */
 export const recordRelapse = (date: Date) => {
+  // Import getUserProgress directly to avoid circular imports
+  const { getUserProgress } = require('./types');
   const progress = getUserProgress();
   
   progress.relapses += 1;
