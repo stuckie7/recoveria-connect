@@ -69,6 +69,9 @@ const Navbar: React.FC = () => {
     </Link>
   ) : null;
 
+  // Debug current path
+  console.log("Current pathname:", pathname);
+
   if (isMobile) {
     return (
       <>

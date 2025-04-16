@@ -35,6 +35,9 @@ jobs:
       - name: Build step
         run: "npm run build"
 
+      - name: Debug Project Name
+        run: echo "Using project name: ${{ secrets.DENO_PROJECT_NAME || 'addictionrecoveryapp' }}"
+
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
@@ -43,4 +46,3 @@ jobs:
           root: "."
           include: .next, public
           import-map: "./import_map.json"
-

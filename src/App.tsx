@@ -19,6 +19,7 @@ import Journal from "./pages/Journal";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -28,13 +29,23 @@ const queryClient = new QueryClient({
   },
 });
 
+// Determine if we're running on a custom domain
+const isCustomDomain = window.location.hostname !== "recoveria-connect.lovable.app" && 
+                      !window.location.hostname.includes("lovableproject.com");
+
+// Get the basename for the router (empty for custom domains, "/" for Lovable domains)
+const getBasename = () => {
+  console.log("Current hostname:", window.location.hostname);
+  return isCustomDomain ? "/" : "/";
+};
+
 const App = () => (
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={getBasename()}>
           <AuthProvider>
             <div className="flex flex-col min-h-screen">
               <Navbar />
