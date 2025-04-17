@@ -1,14 +1,94 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface Plan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  interval: string;
+  features: string[];
+  stripe_price_id: string;
+}
+
+export interface Subscription {
+  id?: string;
+  user_id: string;
+  status: string;
+  current_period_start: number;
+  current_period_end: number;
+  cancel_at?: number | null;
+  canceled_at?: number | null;
+}
+
+export const getSubscriptionPlans = async (): Promise<Plan[]> => {
+  return [
+    {
+      id: 'basic',
+      name: 'Basic',
+      description: 'Free plan with basic features',
+      price: 0,
+      interval: 'month',
+      features: ['Basic access'],
+      stripe_price_id: 'price_basic'
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      description: 'Unlock all features',
+      price: 9.99,
+      interval: 'month',
+      features: ['Premium access', 'Advanced features'],
+      stripe_price_id: 'price_premium'
+    }
+  ];
+};
+
+export const getUserSubscription = async (userId: string): Promise<Subscription | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user subscription:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Unexpected error in getUserSubscription:', error);
+    return null;
+  }
+};
+
+export const checkPremiumAccess = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error checking premium access:', error);
+      return false;
+    }
+
+    return data?.is_premium === true;
+  } catch (error) {
+    console.error('Unexpected error in checkPremiumAccess:', error);
+    return false;
+  }
+};
+
 export const createCheckoutSession = async (priceId: string, returnUrl: string): Promise<string | null> => {
   try {
-    // More detailed logging for debugging
     console.log(`Creating checkout session with price ID: ${priceId}`);
     console.log(`Return URL: ${returnUrl}`);
     
-    // Call the Stripe webhook function with more robust error handling
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         action: 'create-checkout',
@@ -18,7 +98,6 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       method: 'POST',
     });
     
-    // Enhanced error logging
     if (error) {
       console.error('Checkout session creation error:', error);
       toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`, {
@@ -27,7 +106,6 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       return null;
     }
     
-    // Validate the response
     if (!data || !data.url) {
       console.error('Invalid response from checkout session:', data);
       toast.error('Invalid response from subscription service', {
@@ -60,7 +138,7 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         action: 'create-portal',
-        customerId: profile.user.email, // Fallback to email if customer ID not found
+        customerId: profile.user.email,
         returnUrl,
       },
       method: 'POST',
