@@ -21,6 +21,23 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
     console.log(`Creating checkout session with price ID: ${priceId}`);
     console.log(`Return URL: ${returnUrl}`);
     
+    // First, verify that the price ID exists in your Stripe account
+    try {
+      await stripe.prices.retrieve(priceId);
+    } catch (priceError) {
+      console.error(`Price ID ${priceId} does not exist in Stripe:`, priceError.message);
+      return new Response(
+        JSON.stringify({ 
+          error: `Invalid price ID: ${priceId}. Please check your Stripe dashboard for valid price IDs.`,
+          details: priceError.message
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     // Create the session with the provided price ID
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -80,6 +97,44 @@ export async function createPortalSession(data: any, stripe: Stripe) {
 
     console.log(`Creating portal session for customer: ${customerId}`);
     console.log(`Return URL: ${returnUrl}`);
+    
+    // First, check if the customer exists
+    try {
+      await stripe.customers.retrieve(customerId);
+    } catch (customerError) {
+      console.error(`Customer ID ${customerId} does not exist in Stripe:`, customerError.message);
+      
+      // Try to find or create the customer by email instead
+      if (data.email) {
+        console.log(`Attempting to find customer by email: ${data.email}`);
+        const customers = await stripe.customers.list({ email: data.email, limit: 1 });
+        
+        if (customers.data.length > 0) {
+          customerId = customers.data[0].id;
+          console.log(`Found customer by email: ${customerId}`);
+        } else {
+          console.error(`No customer found for email: ${data.email}`);
+          return new Response(
+            JSON.stringify({ error: "Customer not found" }),
+            {
+              status: 404,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ 
+            error: `Invalid customer ID: ${customerId}`,
+            details: customerError.message
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
     
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,

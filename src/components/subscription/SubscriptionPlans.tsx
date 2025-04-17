@@ -109,6 +109,14 @@ const SubscriptionPlans: React.FC = () => {
         </div>
       )}
 
+      <div className="glass-card p-4 mb-4 border-l-4 border-amber-500 bg-amber-50/10">
+        <h3 className="font-medium">⚠️ Stripe Test Mode</h3>
+        <p className="text-sm text-muted-foreground">
+          This is a test integration. Use card number 4242 4242 4242 4242 with any future expiration date 
+          and CVC to test the subscription process.
+        </p>
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrentPlan = subscription && isPremium && plan.name === 'Premium';
@@ -174,12 +182,6 @@ const SubscriptionPlans: React.FC = () => {
                     ? (isPremium ? 'Downgrade to Free' : 'Free Plan') 
                     : 'Subscribe'}
               </Button>
-              
-              {plan.stripe_price_id && (
-                <p className="mt-2 text-xs text-muted-foreground text-center">
-                  {plan.stripe_price_id}
-                </p>
-              )}
             </div>
           );
         })}

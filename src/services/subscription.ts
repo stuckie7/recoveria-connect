@@ -27,6 +27,40 @@ export interface Subscription {
 }
 
 export const getSubscriptionPlans = async (): Promise<Plan[]> => {
+  try {
+    // First, try to fetch subscription plans from the database
+    const { data: dbPlans, error } = await supabase
+      .from('subscription_plans')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching subscription plans:', error);
+      // Fall back to hardcoded plans if database fetch fails
+      return getFallbackPlans();
+    }
+    
+    if (dbPlans && dbPlans.length > 0) {
+      // Transform database plans to match our interface
+      return dbPlans.map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        description: plan.description || '',
+        price: Number(plan.price) || 0,
+        interval: plan.interval || 'month',
+        features: plan.features?.map(f => f.toString()) || [],
+        stripe_price_id: plan.stripe_price_id
+      }));
+    }
+    
+    // If no plans in database, return fallback plans
+    return getFallbackPlans();
+  } catch (error) {
+    console.error('Unexpected error in getSubscriptionPlans:', error);
+    return getFallbackPlans();
+  }
+};
+
+function getFallbackPlans(): Plan[] {
   return [
     {
       id: 'basic',
@@ -35,7 +69,7 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
       price: 0,
       interval: 'month',
       features: ['Basic access'],
-      stripe_price_id: 'price_basic'
+      stripe_price_id: 'price_basic' // You should update this with your actual Stripe price ID
     },
     {
       id: 'premium',
@@ -44,10 +78,10 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
       price: 9.99,
       interval: 'month',
       features: ['Premium access', 'Advanced features'],
-      stripe_price_id: 'price_premium'
+      stripe_price_id: 'price_1OXZXN2eZvKYlo2CQ90dCugv' // Update this with your actual Stripe price ID
     }
   ];
-};
+}
 
 export const getUserSubscription = async (userId: string): Promise<Subscription | null> => {
   try {
@@ -113,9 +147,18 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
     
     if (!data || !data.url) {
       console.error('Invalid response from checkout session:', data);
-      toast.error('Invalid response from subscription service', {
-        description: 'Please try again or contact support.'
-      });
+      
+      // Check if there's an error message in the response
+      if (data && data.error) {
+        toast.error(`Subscription error: ${data.error}`, {
+          description: data.details || 'Please verify your Stripe configuration.'
+        });
+      } else {
+        toast.error('Invalid response from subscription service', {
+          description: 'Please try again or contact support.'
+        });
+      }
+      
       return null;
     }
     
@@ -143,7 +186,8 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         action: 'create-portal',
-        customerId: profile.user.email,
+        customerId: profile.user.id, // This should be the Stripe customer ID, not user ID
+        email: profile.user.email, // Include email as a fallback
         returnUrl,
       },
       method: 'POST',
@@ -159,9 +203,18 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
     
     if (!data || !data.url) {
       console.error('Invalid response from portal session:', data);
-      toast.error('Invalid response from subscription service', {
-        description: 'Please try again or contact support.'
-      });
+      
+      // Check if there's an error message in the response
+      if (data && data.error) {
+        toast.error(`Subscription error: ${data.error}`, {
+          description: data.details || 'Please verify your Stripe configuration.'
+        });
+      } else {
+        toast.error('Invalid response from subscription service', {
+          description: 'Please try again or contact support.'
+        });
+      }
+      
       return null;
     }
     

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plan, Subscription, getSubscriptionPlans, getUserSubscription, checkPremiumAccess, createCheckoutSession, createPortalSession } from '@/services/subscription';
+import { toast } from 'sonner';
 
 export const useSubscription = () => {
   const { user } = useAuth();
@@ -19,6 +20,9 @@ export const useSubscription = () => {
         setPlans(plans);
       } catch (error) {
         console.error('Error fetching plans:', error);
+        toast.error('Failed to load subscription plans', {
+          description: 'Please refresh the page to try again.'
+        });
       }
     };
 
@@ -46,6 +50,9 @@ export const useSubscription = () => {
         setIsPremium(hasPremiumAccess);
       } catch (error) {
         console.error('Error fetching subscription data:', error);
+        toast.error('Error loading subscription data', {
+          description: 'Please refresh to try again.'
+        });
       } finally {
         setIsLoading(false);
       }
@@ -67,8 +74,10 @@ export const useSubscription = () => {
 
       setSubscription(userSubscription);
       setIsPremium(hasPremiumAccess);
+      toast.success('Subscription data refreshed');
     } catch (error) {
       console.error('Error refreshing subscription data:', error);
+      toast.error('Error refreshing subscription data');
     } finally {
       setIsRefreshing(false);
     }
@@ -76,7 +85,10 @@ export const useSubscription = () => {
 
   // Function to initiate subscription
   const subscribe = async (priceId: string) => {
-    if (!user) return null;
+    if (!user) {
+      toast.error('You must be logged in to subscribe');
+      return null;
+    }
     
     try {
       // The URL to return to after checkout
@@ -91,9 +103,12 @@ export const useSubscription = () => {
       
       if (checkoutUrl) {
         console.log('Successfully created checkout session, redirecting to:', checkoutUrl);
+        // Add a success message before redirecting
+        toast.success('Redirecting to Stripe checkout...');
         window.location.href = checkoutUrl;
       } else {
         console.error('Failed to create checkout session: No URL returned');
+        // Toast error already shown in createCheckoutSession
         throw new Error('Failed to create checkout session: No URL returned');
       }
       
@@ -106,16 +121,23 @@ export const useSubscription = () => {
 
   // Function to manage subscription
   const manageSubscription = async () => {
-    if (!user || !subscription) return null;
+    if (!user) {
+      toast.error('You must be logged in to manage your subscription');
+      return null;
+    }
     
     try {
       // The URL to return to after managing subscription
       const returnUrl = `${window.location.origin}/profile?tab=subscription`;
+      
+      toast.info('Preparing subscription management portal...');
       const portalUrl = await createPortalSession(returnUrl);
       
       if (portalUrl) {
+        toast.success('Redirecting to subscription management...');
         window.location.href = portalUrl;
       } else {
+        // Toast error already shown in createPortalSession
         throw new Error('Failed to create portal session');
       }
       
