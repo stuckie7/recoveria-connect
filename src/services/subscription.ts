@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -15,10 +16,14 @@ export interface Subscription {
   id?: string;
   user_id: string;
   status: string;
-  current_period_start: number;
-  current_period_end: number;
-  cancel_at?: number | null;
-  canceled_at?: number | null;
+  current_period_start: string | number;
+  current_period_end: string | number;
+  cancel_at?: string | number | null;
+  canceled_at?: string | number | null;
+  stripe_subscription_id?: string;
+  plan_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const getSubscriptionPlans = async (): Promise<Plan[]> => {
@@ -50,7 +55,7 @@ export const getUserSubscription = async (userId: string): Promise<Subscription 
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching user subscription:', error);
