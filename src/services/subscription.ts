@@ -47,7 +47,8 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
         description: plan.description || '',
         price: Number(plan.price) || 0,
         interval: plan.interval || 'month',
-        features: plan.features?.map(f => f.toString()) || [],
+        // Safely handle features which might be JSON, array, or string
+        features: handleFeaturesArray(plan.features),
         stripe_price_id: plan.stripe_price_id
       }));
     }
@@ -59,6 +60,41 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
     return getFallbackPlans();
   }
 };
+
+// Helper function to safely handle features which might be in different formats
+function handleFeaturesArray(features: any): string[] {
+  if (!features) {
+    return [];
+  }
+
+  // If features is already an array, return it
+  if (Array.isArray(features)) {
+    return features.map(f => f.toString());
+  }
+
+  // If features is a JSON string, parse it
+  if (typeof features === 'string') {
+    try {
+      const parsed = JSON.parse(features);
+      return Array.isArray(parsed) ? parsed.map(f => f.toString()) : [];
+    } catch {
+      // If parsing fails, it might be a single feature
+      return [features];
+    }
+  }
+
+  // If features is an object (coming from JSONB in database)
+  if (typeof features === 'object') {
+    try {
+      // Try to convert object values to an array
+      return Object.values(features).map(f => f.toString());
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
 
 function getFallbackPlans(): Plan[] {
   return [
