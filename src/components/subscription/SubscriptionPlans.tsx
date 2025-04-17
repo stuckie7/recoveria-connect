@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Check, X, RefreshCw } from 'lucide-react';
+import { Check, X, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -24,6 +25,13 @@ const SubscriptionPlans: React.FC = () => {
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
       toast.error('You must be logged in to subscribe');
+      return;
+    }
+    
+    if (!priceId) {
+      toast.error('Invalid price ID', {
+        description: 'This plan does not have a valid Stripe price ID configured. Please contact the administrator.'
+      });
       return;
     }
     
@@ -67,6 +75,12 @@ const SubscriptionPlans: React.FC = () => {
     );
   }
 
+  // Check for placeholder price IDs
+  const hasPlaceholderPriceId = plans.some(plan => 
+    plan.stripe_price_id.includes('your_live_mode_premium_price_id') || 
+    !plan.stripe_price_id
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -109,19 +123,33 @@ const SubscriptionPlans: React.FC = () => {
         </div>
       )}
 
-      <div className="glass-card p-4 mb-4 border-l-4 border-amber-500 bg-amber-50/10">
-        <h3 className="font-medium">⚠️ Stripe Test Mode</h3>
-        <p className="text-sm text-muted-foreground">
+      {/* Configuration warning alerts */}
+      {hasPlaceholderPriceId && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Configuration Required</AlertTitle>
+          <AlertDescription>
+            You need to replace the placeholder Stripe price IDs with actual price IDs from your 
+            Stripe dashboard. Update them in the subscription service or database.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Alert className="bg-amber-50/10 border-amber-500">
+        <AlertTriangle className="h-4 w-4 text-amber-500" />
+        <AlertTitle>Stripe Test Mode</AlertTitle>
+        <AlertDescription>
           This is a test integration. Use card number 4242 4242 4242 4242 with any future expiration date 
           and CVC to test the subscription process.
-        </p>
-      </div>
+        </AlertDescription>
+      </Alert>
 
       <div className="grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrentPlan = subscription && isPremium && plan.name === 'Premium';
           const isFree = plan.price === 0;
           const isProcessing = processingPriceId === plan.stripe_price_id;
+          const hasInvalidPriceId = !plan.stripe_price_id || plan.stripe_price_id.includes('your_live_mode_premium_price_id');
           
           return (
             <div 
@@ -129,6 +157,7 @@ const SubscriptionPlans: React.FC = () => {
               className={`
                 relative rounded-lg border p-6 shadow-sm transition-all
                 ${isCurrentPlan ? 'border-primary/70 bg-primary/5' : ''}
+                ${hasInvalidPriceId && !isFree ? 'border-red-300 bg-red-50/10' : ''}
               `}
             >
               {isCurrentPlan && (
@@ -165,11 +194,17 @@ const SubscriptionPlans: React.FC = () => {
                 )}
               </ul>
               
+              {hasInvalidPriceId && !isFree && (
+                <p className="text-xs text-red-500 mb-2">
+                  Configuration needed: Replace placeholder price ID
+                </p>
+              )}
+              
               <Button
                 className="w-full"
                 variant={plan.name === 'Premium' ? 'default' : 'outline'}
                 onClick={() => isFree ? null : handleSubscribe(plan.stripe_price_id)}
-                disabled={isCurrentPlan || (isFree && !isPremium) || isProcessing}
+                disabled={isCurrentPlan || (isFree && !isPremium) || isProcessing || (hasInvalidPriceId && !isFree)}
               >
                 {isProcessing ? (
                   <>
@@ -180,7 +215,9 @@ const SubscriptionPlans: React.FC = () => {
                   ? 'Current Plan' 
                   : isFree 
                     ? (isPremium ? 'Downgrade to Free' : 'Free Plan') 
-                    : 'Subscribe'}
+                    : hasInvalidPriceId
+                      ? 'Configure Price ID' 
+                      : 'Subscribe'}
               </Button>
             </div>
           );

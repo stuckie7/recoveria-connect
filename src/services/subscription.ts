@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -105,7 +104,7 @@ function getFallbackPlans(): Plan[] {
       price: 0,
       interval: 'month',
       features: ['Basic access'],
-      stripe_price_id: 'price_basic' // You should update this with your actual Stripe price ID
+      stripe_price_id: '' // No price ID needed for free plan
     },
     {
       id: 'premium',
@@ -114,7 +113,8 @@ function getFallbackPlans(): Plan[] {
       price: 9.99,
       interval: 'month',
       features: ['Premium access', 'Advanced features'],
-      stripe_price_id: 'price_1OXZXN2eZvKYlo2CQ90dCugv' // Update this with your actual Stripe price ID
+      // This is a test price ID - in production, you should replace with your actual Stripe price ID
+      stripe_price_id: 'price_1OXZXN2eZvKYlo2CQ90dCugv' // Use Stripe's test price ID
     }
   ];
 }
@@ -161,6 +161,14 @@ export const checkPremiumAccess = async (userId: string): Promise<boolean> => {
 
 export const createCheckoutSession = async (priceId: string, returnUrl: string): Promise<string | null> => {
   try {
+    if (!priceId) {
+      console.error('Missing price ID for checkout session');
+      toast.error('Invalid subscription plan', {
+        description: 'Please select a valid subscription plan.'
+      });
+      return null;
+    }
+    
     console.log(`Creating checkout session with price ID: ${priceId}`);
     console.log(`Return URL: ${returnUrl}`);
     
@@ -187,7 +195,7 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       // Check if there's an error message in the response
       if (data && data.error) {
         toast.error(`Subscription error: ${data.error}`, {
-          description: data.details || 'Please verify your Stripe configuration.'
+          description: data.suggestion || data.details || 'Please verify your Stripe configuration.'
         });
       } else {
         toast.error('Invalid response from subscription service', {

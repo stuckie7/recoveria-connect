@@ -10,7 +10,10 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
     if (!priceId) {
       console.error("Missing price ID in request");
       return new Response(
-        JSON.stringify({ error: "Price ID is required" }),
+        JSON.stringify({ 
+          error: "Price ID is required",
+          details: "Please provide a valid Stripe price ID"
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -28,8 +31,9 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
       console.error(`Price ID ${priceId} does not exist in Stripe:`, priceError.message);
       return new Response(
         JSON.stringify({ 
-          error: `Invalid price ID: ${priceId}. Please check your Stripe dashboard for valid price IDs.`,
-          details: priceError.message
+          error: `Invalid price ID: ${priceId}. Please update with a valid price ID from your Stripe dashboard.`,
+          details: `Error from Stripe: ${priceError.message}`, 
+          suggestion: "Make sure to replace placeholder price IDs with actual IDs from your Stripe dashboard."
         }),
         {
           status: 400,
@@ -69,7 +73,8 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
         error: "Failed to create checkout session", 
         details: error.message,
         code: error.type || error.code,
-        stack: error.stack
+        stack: error.stack,
+        suggestion: "Please verify your Stripe configuration and price IDs."
       }),
       {
         status: 500,
