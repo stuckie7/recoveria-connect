@@ -2,137 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export interface Plan {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  interval: string;
-  features: string[];
-  stripe_price_id: string;
-}
-
-export interface Subscription {
-  id: string;
-  status: string;
-  current_period_end: string;
-  cancel_at: string | null;
-}
-
-// Fetch available subscription plans
-export const getSubscriptionPlans = async (): Promise<Plan[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .order('price', { ascending: true });
-    
-    if (error) {
-      console.error('Error fetching subscription plans:', error);
-      toast.error('Failed to fetch subscription plans');
-      return [];
-    }
-    
-    return data.map(plan => {
-      // Parse features safely from the JSONB field
-      let features: string[] = [];
-      
-      if (plan.features) {
-        try {
-          // Try to extract features array from different possible formats
-          if (typeof plan.features === 'string') {
-            // If features is a JSON string, parse it
-            const parsed = JSON.parse(plan.features);
-            if (Array.isArray(parsed)) {
-              features = parsed;
-            } else if (parsed.features && Array.isArray(parsed.features)) {
-              features = parsed.features;
-            }
-          } else if (typeof plan.features === 'object') {
-            if (Array.isArray(plan.features)) {
-              // If features is already an array
-              features = plan.features as string[];
-            } else if (plan.features.features && Array.isArray(plan.features.features)) {
-              // If features is in a nested "features" property
-              features = plan.features.features as string[];
-            }
-          }
-        } catch (e) {
-          console.warn('Error parsing plan features:', e);
-          // Default to empty array if parsing fails
-        }
-      }
-      
-      return {
-        ...plan,
-        features: features.length ? features : ['Basic access']
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching subscription plans:', error);
-    toast.error('Failed to fetch subscription plans');
-    return [];
-  }
-};
-
-// Fetch the user's active subscription
-export const getUserSubscription = async (userId: string): Promise<Subscription | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error fetching user subscription:', error);
-      return null;
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error fetching user subscription:', error);
-    return null;
-  }
-};
-
-// Check if the user has premium access
-export const checkPremiumAccess = async (userId: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('is_premium')
-      .eq('id', userId)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error checking premium status:', error);
-      return false;
-    }
-    
-    return data?.is_premium || false;
-  } catch (error) {
-    console.error('Error checking premium status:', error);
-    return false;
-  }
-};
-
-// Create a Stripe checkout session
 export const createCheckoutSession = async (priceId: string, returnUrl: string): Promise<string | null> => {
   try {
-    // Create customer in Stripe if needed
-    const { data: profile } = await supabase.auth.getUser();
-    if (!profile.user) {
-      toast.error('You must be logged in to subscribe');
-      return null;
-    }
+    // More detailed logging for debugging
+    console.log(`Creating checkout session with price ID: ${priceId}`);
+    console.log(`Return URL: ${returnUrl}`);
     
-    // Log the price ID we're sending to the function
-    console.log("Creating checkout with price ID:", priceId);
-    console.log("Return URL:", returnUrl);
-    
-    // Call the Stripe webhook function
+    // Call the Stripe webhook function with more robust error handling
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         action: 'create-checkout',
@@ -142,29 +18,35 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
       method: 'POST',
     });
     
+    // Enhanced error logging
     if (error) {
-      console.error('Error creating checkout session:', error);
-      toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`);
+      console.error('Checkout session creation error:', error);
+      toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`, {
+        description: 'Please try again or contact support.'
+      });
       return null;
     }
     
-    console.log('Stripe webhook response:', data);
-    
+    // Validate the response
     if (!data || !data.url) {
       console.error('Invalid response from checkout session:', data);
-      toast.error(`Invalid response from subscription service: ${JSON.stringify(data)}`);
+      toast.error('Invalid response from subscription service', {
+        description: 'Please try again or contact support.'
+      });
       return null;
     }
     
+    console.log('Checkout session created successfully:', data.url);
     return data.url;
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`);
+    console.error('Unexpected error in createCheckoutSession:', error);
+    toast.error('An unexpected error occurred', {
+      description: 'Please try again or contact support.'
+    });
     return null;
   }
 };
 
-// Create a Stripe customer portal session
 export const createPortalSession = async (returnUrl: string): Promise<string | null> => {
   try {
     const { data: profile } = await supabase.auth.getUser();
@@ -173,43 +55,40 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
       return null;
     }
     
-    const { data: customerData, error: customerError } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', profile.user.id)
-      .maybeSingle();
-    
-    if (customerError || !customerData?.stripe_customer_id) {
-      console.error('No stripe customer ID found:', customerError || 'No data returned');
-      toast.error('No subscription found');
-      return null;
-    }
+    console.log('Creating portal session for user:', profile.user.id);
     
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         action: 'create-portal',
-        customerId: customerData.stripe_customer_id,
+        customerId: profile.user.email, // Fallback to email if customer ID not found
         returnUrl,
       },
       method: 'POST',
     });
     
     if (error) {
-      console.error('Error creating portal session:', error);
-      toast.error(`Failed to create portal session: ${error.message || 'Unknown error'}`);
+      console.error('Portal session creation error:', error);
+      toast.error(`Failed to create portal session: ${error.message || 'Unknown error'}`, {
+        description: 'Please try again or contact support.'
+      });
       return null;
     }
     
     if (!data || !data.url) {
       console.error('Invalid response from portal session:', data);
-      toast.error(`Invalid response from subscription service: ${JSON.stringify(data)}`);
+      toast.error('Invalid response from subscription service', {
+        description: 'Please try again or contact support.'
+      });
       return null;
     }
     
+    console.log('Portal session created successfully:', data.url);
     return data.url;
   } catch (error) {
-    console.error('Error creating portal session:', error);
-    toast.error(`Failed to create portal session: ${error.message || 'Unknown error'}`);
+    console.error('Unexpected error in createPortalSession:', error);
+    toast.error('An unexpected error occurred', {
+      description: 'Please try again or contact support.'
+    });
     return null;
   }
 };
