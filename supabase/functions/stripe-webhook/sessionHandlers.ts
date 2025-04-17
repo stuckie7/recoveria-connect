@@ -19,6 +19,7 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
     }
 
     console.log(`Creating checkout session with price ID: ${priceId}`);
+    console.log(`Return URL: ${returnUrl}`);
     
     // Create the session with the provided price ID
     const session = await stripe.checkout.sessions.create({
@@ -35,6 +36,8 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
     });
 
     console.log("Checkout session created successfully:", session.id);
+    console.log("Checkout URL:", session.url);
+    
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -48,7 +51,8 @@ export async function createCheckoutSession(data: any, stripe: Stripe) {
       JSON.stringify({ 
         error: "Failed to create checkout session", 
         details: error.message,
-        code: error.type || error.code
+        code: error.type || error.code,
+        stack: error.stack
       }),
       {
         status: 500,
@@ -75,12 +79,16 @@ export async function createPortalSession(data: any, stripe: Stripe) {
     }
 
     console.log(`Creating portal session for customer: ${customerId}`);
+    console.log(`Return URL: ${returnUrl}`);
+    
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     });
 
     console.log("Portal session created successfully:", session.id);
+    console.log("Portal URL:", session.url);
+    
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -94,7 +102,8 @@ export async function createPortalSession(data: any, stripe: Stripe) {
       JSON.stringify({ 
         error: "Failed to create portal session",
         details: error.message,
-        code: error.type || error.code
+        code: error.type || error.code,
+        stack: error.stack
       }),
       {
         status: 500,

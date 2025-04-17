@@ -104,14 +104,14 @@ export const checkPremiumAccess = async (userId: string): Promise<boolean> => {
       .from('profiles')
       .select('is_premium')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error checking premium status:', error);
       return false;
     }
     
-    return data.is_premium;
+    return data?.is_premium || false;
   } catch (error) {
     console.error('Error checking premium status:', error);
     return false;
@@ -130,10 +130,12 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
     
     // Log the price ID we're sending to the function
     console.log("Creating checkout with price ID:", priceId);
+    console.log("Return URL:", returnUrl);
     
     // Call the Stripe webhook function
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
+        action: 'create-checkout',
         priceId,
         returnUrl,
       },
@@ -142,20 +144,22 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
     
     if (error) {
       console.error('Error creating checkout session:', error);
-      toast.error('Failed to create checkout session');
+      toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`);
       return null;
     }
     
+    console.log('Stripe webhook response:', data);
+    
     if (!data || !data.url) {
       console.error('Invalid response from checkout session:', data);
-      toast.error('Invalid response from subscription service');
+      toast.error(`Invalid response from subscription service: ${JSON.stringify(data)}`);
       return null;
     }
     
     return data.url;
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    toast.error('Failed to create checkout session');
+    toast.error(`Failed to create checkout session: ${error.message || 'Unknown error'}`);
     return null;
   }
 };
@@ -173,15 +177,17 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', profile.user.id)
-      .single();
+      .maybeSingle();
     
-    if (customerError || !customerData.stripe_customer_id) {
+    if (customerError || !customerData?.stripe_customer_id) {
+      console.error('No stripe customer ID found:', customerError || 'No data returned');
       toast.error('No subscription found');
       return null;
     }
     
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
+        action: 'create-portal',
         customerId: customerData.stripe_customer_id,
         returnUrl,
       },
@@ -190,20 +196,20 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
     
     if (error) {
       console.error('Error creating portal session:', error);
-      toast.error('Failed to create portal session');
+      toast.error(`Failed to create portal session: ${error.message || 'Unknown error'}`);
       return null;
     }
     
     if (!data || !data.url) {
       console.error('Invalid response from portal session:', data);
-      toast.error('Invalid response from subscription service');
+      toast.error(`Invalid response from subscription service: ${JSON.stringify(data)}`);
       return null;
     }
     
     return data.url;
   } catch (error) {
     console.error('Error creating portal session:', error);
-    toast.error('Failed to create portal session');
+    toast.error(`Failed to create portal session: ${error.message || 'Unknown error'}`);
     return null;
   }
 };

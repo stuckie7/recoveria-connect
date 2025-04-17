@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -18,6 +18,8 @@ const SubscriptionPlans: React.FC = () => {
     manageSubscription,
     refreshSubscription 
   } = useSubscription();
+  
+  const [processingPriceId, setProcessingPriceId] = useState<string | null>(null);
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
@@ -25,17 +27,18 @@ const SubscriptionPlans: React.FC = () => {
       return;
     }
     
+    setProcessingPriceId(priceId);
+    
     try {
       // Make sure we're passing the actual Stripe price ID
       console.log("Subscribing with price ID:", priceId);
-      const checkoutUrl = await subscribe(priceId);
-      
-      if (!checkoutUrl) {
-        toast.error('Failed to start subscription process');
-      }
+      await subscribe(priceId);
+      // Note: We don't need to handle success here as the user will be redirected to Stripe
     } catch (error) {
       console.error('Subscription error:', error);
-      toast.error('Error starting subscription process');
+      toast.error('Error starting subscription process. Please try again later.');
+    } finally {
+      setProcessingPriceId(null);
     }
   };
 
@@ -110,6 +113,7 @@ const SubscriptionPlans: React.FC = () => {
         {plans.map((plan) => {
           const isCurrentPlan = subscription && isPremium && plan.name === 'Premium';
           const isFree = plan.price === 0;
+          const isProcessing = processingPriceId === plan.stripe_price_id;
           
           return (
             <div 
@@ -157,9 +161,14 @@ const SubscriptionPlans: React.FC = () => {
                 className="w-full"
                 variant={plan.name === 'Premium' ? 'default' : 'outline'}
                 onClick={() => isFree ? null : handleSubscribe(plan.stripe_price_id)}
-                disabled={isCurrentPlan || (isFree && !isPremium)}
+                disabled={isCurrentPlan || (isFree && !isPremium) || isProcessing}
               >
-                {isCurrentPlan 
+                {isProcessing ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                    Processing...
+                  </>
+                ) : isCurrentPlan 
                   ? 'Current Plan' 
                   : isFree 
                     ? (isPremium ? 'Downgrade to Free' : 'Free Plan') 
@@ -168,7 +177,7 @@ const SubscriptionPlans: React.FC = () => {
               
               {plan.stripe_price_id && (
                 <p className="mt-2 text-xs text-muted-foreground text-center">
-                  Live Mode Price: {plan.stripe_price_id}
+                  {plan.stripe_price_id}
                 </p>
               )}
             </div>

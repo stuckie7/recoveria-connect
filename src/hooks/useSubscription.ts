@@ -82,18 +82,25 @@ export const useSubscription = () => {
       // The URL to return to after checkout
       const returnUrl = `${window.location.origin}/profile?tab=subscription`;
       console.log(`Creating checkout session with price ID: ${priceId}`);
+      
+      // Add more detailed logging for debugging
+      console.log('User ID:', user.id);
+      console.log('Return URL:', returnUrl);
+      
       const checkoutUrl = await createCheckoutSession(priceId, returnUrl);
       
       if (checkoutUrl) {
+        console.log('Successfully created checkout session, redirecting to:', checkoutUrl);
         window.location.href = checkoutUrl;
       } else {
-        throw new Error('Failed to create checkout session');
+        console.error('Failed to create checkout session: No URL returned');
+        throw new Error('Failed to create checkout session: No URL returned');
       }
       
       return checkoutUrl;
     } catch (error) {
       console.error('Error in subscribe function:', error);
-      return null;
+      throw error; // Propagate error to caller for better error handling
     }
   };
 
