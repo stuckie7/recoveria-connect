@@ -30,7 +30,7 @@ const SubscriptionPlans: React.FC = () => {
     
     if (!priceId) {
       toast.error('Invalid price ID', {
-        description: 'This plan does not have a valid Stripe price ID configured. Please contact the administrator.'
+        description: 'Please contact support. The Stripe price ID is not configured correctly.'
       });
       return;
     }
@@ -38,13 +38,13 @@ const SubscriptionPlans: React.FC = () => {
     setProcessingPriceId(priceId);
     
     try {
-      // Make sure we're passing the actual Stripe price ID
       console.log("Subscribing with price ID:", priceId);
       await subscribe(priceId);
-      // Note: We don't need to handle success here as the user will be redirected to Stripe
     } catch (error) {
       console.error('Subscription error:', error);
-      toast.error('Error starting subscription process. Please try again later.');
+      toast.error('Error starting subscription process', {
+        description: 'Please try again or contact support.'
+      });
     } finally {
       setProcessingPriceId(null);
     }

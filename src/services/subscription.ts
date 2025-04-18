@@ -27,32 +27,27 @@ export interface Subscription {
 
 export const getSubscriptionPlans = async (): Promise<Plan[]> => {
   try {
-    // First, try to fetch subscription plans from the database
     const { data: dbPlans, error } = await supabase
       .from('subscription_plans')
       .select('*');
     
     if (error) {
       console.error('Error fetching subscription plans:', error);
-      // Fall back to hardcoded plans if database fetch fails
       return getFallbackPlans();
     }
     
     if (dbPlans && dbPlans.length > 0) {
-      // Transform database plans to match our interface
       return dbPlans.map(plan => ({
         id: plan.id,
         name: plan.name,
         description: plan.description || '',
         price: Number(plan.price) || 0,
         interval: plan.interval || 'month',
-        // Safely handle features which might be JSON, array, or string
         features: handleFeaturesArray(plan.features),
         stripe_price_id: plan.stripe_price_id
       }));
     }
     
-    // If no plans in database, return fallback plans
     return getFallbackPlans();
   } catch (error) {
     console.error('Unexpected error in getSubscriptionPlans:', error);
@@ -60,32 +55,26 @@ export const getSubscriptionPlans = async (): Promise<Plan[]> => {
   }
 };
 
-// Helper function to safely handle features which might be in different formats
 function handleFeaturesArray(features: any): string[] {
   if (!features) {
     return [];
   }
 
-  // If features is already an array, return it
   if (Array.isArray(features)) {
     return features.map(f => f.toString());
   }
 
-  // If features is a JSON string, parse it
   if (typeof features === 'string') {
     try {
       const parsed = JSON.parse(features);
       return Array.isArray(parsed) ? parsed.map(f => f.toString()) : [];
     } catch {
-      // If parsing fails, it might be a single feature
       return [features];
     }
   }
 
-  // If features is an object (coming from JSONB in database)
   if (typeof features === 'object') {
     try {
-      // Try to convert object values to an array
       return Object.values(features).map(f => f.toString());
     } catch {
       return [];
@@ -113,8 +102,7 @@ function getFallbackPlans(): Plan[] {
       price: 9.99,
       interval: 'month',
       features: ['Premium access', 'Advanced features'],
-      // This is a test price ID - in production, you should replace with your actual Stripe price ID
-      stripe_price_id: 'price_1OXZXN2eZvKYlo2CQ90dCugv' // Use Stripe's test price ID
+      stripe_price_id: 'price_1RElV7Fzx1aXznlzoGZCSXXt' // Provided Stripe price ID
     }
   ];
 }
@@ -192,7 +180,6 @@ export const createCheckoutSession = async (priceId: string, returnUrl: string):
     if (!data || !data.url) {
       console.error('Invalid response from checkout session:', data);
       
-      // Check if there's an error message in the response
       if (data && data.error) {
         toast.error(`Subscription error: ${data.error}`, {
           description: data.suggestion || data.details || 'Please verify your Stripe configuration.'
@@ -230,8 +217,8 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
     const { data, error } = await supabase.functions.invoke('stripe-webhook', {
       body: {
         action: 'create-portal',
-        customerId: profile.user.id, // This should be the Stripe customer ID, not user ID
-        email: profile.user.email, // Include email as a fallback
+        customerId: profile.user.id,
+        email: profile.user.email,
         returnUrl,
       },
       method: 'POST',
@@ -248,7 +235,6 @@ export const createPortalSession = async (returnUrl: string): Promise<string | n
     if (!data || !data.url) {
       console.error('Invalid response from portal session:', data);
       
-      // Check if there's an error message in the response
       if (data && data.error) {
         toast.error(`Subscription error: ${data.error}`, {
           description: data.details || 'Please verify your Stripe configuration.'
