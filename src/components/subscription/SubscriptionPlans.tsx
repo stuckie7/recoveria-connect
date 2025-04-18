@@ -135,14 +135,6 @@ const SubscriptionPlans: React.FC = () => {
         </Alert>
       )}
 
-      <Alert className="bg-amber-50/10 border-amber-500">
-        <AlertTriangle className="h-4 w-4 text-amber-500" />
-        <AlertTitle>Stripe Test Mode</AlertTitle>
-        <AlertDescription>
-          This is a test integration. Use card number 4242 4242 4242 4242 with any future expiration date 
-          and CVC to test the subscription process.
-        </AlertDescription>
-      </Alert>
 
       <div className="grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
