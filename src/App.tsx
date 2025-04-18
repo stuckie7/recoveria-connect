@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,8 +17,8 @@ import Profile from "./pages/Profile";
 import Journal from "./pages/Journal";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import RefreshButton from "./components/RefreshButton";
 
-// Create a new QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -29,11 +28,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Determine if we're running on a custom domain
 const isCustomDomain = window.location.hostname !== "recoveria-connect.lovable.app" && 
                       !window.location.hostname.includes("lovableproject.com");
 
-// Get the basename for the router (empty for custom domains, "/" for Lovable domains)
 const getBasename = () => {
   console.log("Current hostname:", window.location.hostname);
   return isCustomDomain ? "/" : "/";
@@ -51,12 +48,10 @@ const App = () => (
               <Navbar />
               <main className="flex-grow">
                 <Routes>
-                  {/* Public routes */}
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/welcome" element={<WelcomePage />} />
                   <Route path="/404" element={<NotFound />} />
                   
-                  {/* Protected routes that require onboarding to be completed */}
                   <Route element={<OnboardingGuard />}>
                     <Route element={<PrivateRoute />}>
                       <Route path="/" element={<Dashboard />} />
@@ -71,6 +66,7 @@ const App = () => (
                 </Routes>
               </main>
               <EmergencySupport />
+              <RefreshButton />
             </div>
           </AuthProvider>
         </BrowserRouter>
