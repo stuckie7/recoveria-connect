@@ -18,18 +18,9 @@ const moodToValue = (mood: Mood): number => {
 
 const ProgressChart: React.FC = () => {
   const { checkIns, isLoading } = useCheckIns();
+  const [chartData, setChartData] = useState<any[]>([]);
   
-  if (isLoading) {
-    return (
-      <div className="neo-card h-64 animate-fade-in">
-        <h3 className="text-lg font-medium mb-4">Mood Trends</h3>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
-
+  // Create chart data function - now outside the component render
   const createChartData = (checkIns: CheckIn[], days: number = 7) => {
     const data: { date: string; mood: number; formattedDate: string }[] = [];
     const today = new Date();
@@ -59,13 +50,23 @@ const ProgressChart: React.FC = () => {
     
     return data;
   };
-
-  const [chartData, setChartData] = useState<any[]>([]);
-
+  
+  // Use useEffect to update chart data when checkIns change
   useEffect(() => {
     const data = createChartData(checkIns);
     setChartData(data);
   }, [checkIns]);
+  
+  if (isLoading) {
+    return (
+      <div className="neo-card h-64 animate-fade-in">
+        <h3 className="text-lg font-medium mb-4">Mood Trends</h3>
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
