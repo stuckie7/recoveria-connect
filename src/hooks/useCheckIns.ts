@@ -24,7 +24,21 @@ export function useCheckIns() {
 
       if (error) throw error;
 
-      setCheckIns(data || []);
+      // Transform database records to match CheckIn type
+      const transformedData: CheckIn[] = (data || []).map(item => ({
+        id: item.id,
+        date: item.date,
+        mood: item.mood as CheckIn['mood'],
+        sleepQuality: item.sleep_quality as CheckIn['sleepQuality'],
+        energyLevel: item.energy_level as CheckIn['energyLevel'],
+        activities: item.activities || [],
+        triggers: item.triggers || [],
+        notes: item.notes || '',
+        strategies: [], // Default empty array for strategies
+        feelingBetter: false // Default value
+      }));
+
+      setCheckIns(transformedData);
     } catch (error) {
       console.error('Error fetching check-ins:', error);
       toast.error('Failed to load check-ins');
@@ -35,16 +49,42 @@ export function useCheckIns() {
 
   const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>) => {
     try {
+      // Transform the CheckIn object to match database schema
+      const checkInRecord = {
+        user_id: user?.id,
+        mood: checkIn.mood,
+        sleep_quality: checkIn.sleepQuality,
+        energy_level: checkIn.energyLevel,
+        activities: checkIn.activities,
+        triggers: checkIn.triggers,
+        notes: checkIn.notes,
+        date: checkIn.date
+      };
+
       const { data, error } = await supabase
         .from('check_ins')
-        .insert([{ ...checkIn, user_id: user?.id }])
+        .insert([checkInRecord])
         .select()
         .single();
 
       if (error) throw error;
 
-      setCheckIns(prev => [data, ...prev]);
-      return data;
+      // Transform the response back to CheckIn type
+      const newCheckIn: CheckIn = {
+        id: data.id,
+        date: data.date,
+        mood: data.mood,
+        sleepQuality: data.sleep_quality,
+        energyLevel: data.energy_level,
+        activities: data.activities || [],
+        triggers: data.triggers || [],
+        notes: data.notes || '',
+        strategies: [],
+        feelingBetter: false
+      };
+
+      setCheckIns(prev => [newCheckIn, ...prev]);
+      return newCheckIn;
     } catch (error) {
       console.error('Error adding check-in:', error);
       toast.error('Failed to save check-in');

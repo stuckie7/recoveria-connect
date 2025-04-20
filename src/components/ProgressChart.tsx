@@ -1,7 +1,8 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCheckIns } from '@/hooks/useCheckIns';
-import { Mood } from '@/types';
+import { Mood, CheckIn } from '@/types';
 
 // Helper function to convert mood to numeric value
 const moodToValue = (mood: Mood): number => {

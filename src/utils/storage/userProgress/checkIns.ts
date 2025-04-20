@@ -15,6 +15,7 @@ export const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>): Promise<CheckIn>
   const { data, error } = await supabase
     .from('check_ins')
     .insert([{
+      user_id: checkIn.user_id || supabase.auth.getUser().then(res => res.data.user?.id),
       mood: checkIn.mood,
       sleep_quality: checkIn.sleepQuality,
       energy_level: checkIn.energyLevel,
@@ -31,10 +32,24 @@ export const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>): Promise<CheckIn>
     throw error;
   }
 
+  // Transform the response to match CheckIn type
+  const newCheckIn: CheckIn = {
+    id: data.id,
+    date: data.date,
+    mood: data.mood,
+    sleepQuality: data.sleep_quality,
+    energyLevel: data.energy_level,
+    activities: data.activities || [],
+    triggers: data.triggers || [],
+    notes: data.notes || '',
+    strategies: [], // Default empty array
+    feelingBetter: false // Default value
+  };
+
   // Also update local storage for backward compatibility
   const progress = getUserProgress();
-  progress.checkIns.push(data);
+  progress.checkIns.push(newCheckIn);
   saveUserProgress(progress);
   
-  return data;
+  return newCheckIn;
 };
