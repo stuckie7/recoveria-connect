@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckIn } from '@/types';
+import { CheckIn, Activity } from '@/types';
 
 export function useCheckIns() {
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
@@ -25,18 +25,29 @@ export function useCheckIns() {
       if (error) throw error;
 
       // Transform database records to match CheckIn type
-      const transformedData: CheckIn[] = (data || []).map(item => ({
-        id: item.id,
-        date: item.date,
-        mood: item.mood as CheckIn['mood'],
-        sleepQuality: item.sleep_quality as CheckIn['sleepQuality'],
-        energyLevel: item.energy_level as CheckIn['energyLevel'],
-        activities: Array.isArray(item.activities) ? item.activities : [],
-        triggers: item.triggers || [],
-        notes: item.notes || '',
-        strategies: [], // Default empty array for strategies
-        feelingBetter: false // Default value
-      }));
+      const transformedData: CheckIn[] = (data || []).map(item => {
+        // Transform activities from JSON to Activity type
+        const transformedActivities: Activity[] = Array.isArray(item.activities) 
+          ? item.activities.map((act: any) => ({
+              type: act.type || 'other',
+              durationMinutes: act.durationMinutes || 0,
+              notes: act.notes
+            })) 
+          : [];
+
+        return {
+          id: item.id,
+          date: item.date,
+          mood: item.mood as CheckIn['mood'],
+          sleepQuality: item.sleep_quality as CheckIn['sleepQuality'],
+          energyLevel: item.energy_level as CheckIn['energyLevel'],
+          activities: transformedActivities,
+          triggers: item.triggers || [],
+          notes: item.notes || '',
+          strategies: [], // Default empty array for strategies
+          feelingBetter: false // Default value
+        };
+      });
 
       setCheckIns(transformedData);
     } catch (error) {
@@ -69,6 +80,15 @@ export function useCheckIns() {
 
       if (error) throw error;
 
+      // Transform activities from JSON to Activity type
+      const transformedActivities: Activity[] = Array.isArray(data.activities) 
+        ? data.activities.map((act: any) => ({
+            type: act.type || 'other',
+            durationMinutes: act.durationMinutes || 0,
+            notes: act.notes
+          })) 
+        : [];
+
       // Transform the response back to CheckIn type
       const newCheckIn: CheckIn = {
         id: data.id,
@@ -76,7 +96,7 @@ export function useCheckIns() {
         mood: data.mood as CheckIn['mood'],
         sleepQuality: data.sleep_quality as CheckIn['sleepQuality'],
         energyLevel: data.energy_level as CheckIn['energyLevel'],
-        activities: Array.isArray(data.activities) ? data.activities : [],
+        activities: transformedActivities,
         triggers: data.triggers || [],
         notes: data.notes || '',
         strategies: [],

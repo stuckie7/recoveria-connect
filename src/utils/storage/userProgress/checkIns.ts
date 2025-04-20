@@ -3,7 +3,7 @@
  * Check-in management utilities
  */
 
-import { CheckIn } from '@/types';
+import { CheckIn, Activity } from '@/types';
 import { getUserProgress, saveUserProgress } from './types';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,6 +32,15 @@ export const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>): Promise<CheckIn>
     throw error;
   }
 
+  // Transform activities from JSON to Activity type
+  const transformedActivities: Activity[] = Array.isArray(data.activities) 
+    ? data.activities.map((act: any) => ({
+        type: act.type || 'other',
+        durationMinutes: act.durationMinutes || 0,
+        notes: act.notes
+      })) 
+    : [];
+
   // Transform the response to match CheckIn type
   const newCheckIn: CheckIn = {
     id: data.id,
@@ -39,7 +48,7 @@ export const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>): Promise<CheckIn>
     mood: data.mood as CheckIn['mood'],
     sleepQuality: data.sleep_quality as CheckIn['sleepQuality'],
     energyLevel: data.energy_level as CheckIn['energyLevel'],
-    activities: Array.isArray(data.activities) ? data.activities : [],
+    activities: transformedActivities,
     triggers: data.triggers || [],
     notes: data.notes || '',
     strategies: [], // Default empty array
