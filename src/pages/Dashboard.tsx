@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { getUserProgress, updateStreak } from '@/utils/storage';
 import SobrietyCounter from '@/components/SobrietyCounter';
@@ -55,9 +56,9 @@ const Dashboard: React.FC = () => {
   return (
     <div className="py-20 px-4 min-h-screen bg-recovery-fun-iris">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-xl px-6 py-4 mb-6 shadow-md flex items-center">
-          <RefreshButton className="mr-4" />
-          <h1 className="text-3xl font-bold text-center lg:text-left text-purple-900">Your Recovery Journey</h1>
+        <div className="bg-white rounded-xl px-6 py-4 mb-6 shadow-md flex items-center justify-center">
+          <RefreshButton className="absolute left-4" />
+          <h1 className="text-3xl font-bold text-center text-purple-900">Your Recovery Journey</h1>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
