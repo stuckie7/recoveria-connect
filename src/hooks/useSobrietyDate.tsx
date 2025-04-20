@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { getUserProgress, setSobrietyStartDate, updateStreak } from '@/utils/storage';
 import { UserProgress } from '@/types';
@@ -11,7 +11,14 @@ export function useSobrietyDate() {
   const { user } = useAuth();
   const [progress, setProgress] = useState<UserProgress>(getUserProgress());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(progress.startDate));
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    try {
+      const date = new Date(progress.startDate);
+      return isNaN(date.getTime()) ? new Date() : date;
+    } catch {
+      return new Date();
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
   
   // Update progress when it changes and calculate current streak
@@ -92,13 +99,18 @@ export function useSobrietyDate() {
           if (!isNaN(supabaseDate.getTime()) && 
               (isNaN(localDate.getTime()) || supabaseDate.toISOString() !== localDate.toISOString())) {
             console.log('Updating local sobriety date from Supabase:', supabaseDate);
-            setSobrietyStartDate(supabaseDate);
-            setSelectedDate(supabaseDate);
             
-            // Get fresh progress with updated date and streaks
-            const freshProgress = getUserProgress();
-            setProgress(freshProgress);
-            console.log('Updated progress with Supabase date:', freshProgress);
+            try {
+              setSobrietyStartDate(supabaseDate);
+              setSelectedDate(supabaseDate);
+              
+              // Get fresh progress with updated date and streaks
+              const freshProgress = getUserProgress();
+              setProgress(freshProgress);
+              console.log('Updated progress with Supabase date:', freshProgress);
+            } catch (error) {
+              console.error('Error updating local sobriety date:', error);
+            }
           }
         } else if (user && progress.startDate) {
           // If no date in Supabase but we have a local date, save it to Supabase
@@ -123,7 +135,7 @@ export function useSobrietyDate() {
     syncWithSupabase();
   }, [user, progress.startDate]);
   
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDateChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       // Create a new date object without timezone conversion issues
       const dateValue = event.target.value;
@@ -136,9 +148,9 @@ export function useSobrietyDate() {
       console.error('Error handling date change:', error);
       toast.error('Invalid date format');
     }
-  };
+  }, []);
   
-  const handleSaveDate = async () => {
+  const handleSaveDate = useCallback(async () => {
     try {
       setIsLoading(true);
       const now = new Date();
@@ -155,24 +167,32 @@ export function useSobrietyDate() {
       normalizedDate.setHours(0, 0, 0, 0);
       
       console.log('Saving sobriety date locally:', normalizedDate.toISOString());
-      setSobrietyStartDate(normalizedDate);
       
-      // Update the local progress state with the newly saved data
-      const updatedProgress = getUserProgress();
-      
-      // Calculate and update the current streak and total sober days
-      const currentStreak = daysBetween(normalizedDate);
-      updatedProgress.currentStreak = currentStreak;
-      updatedProgress.totalDaysSober = currentStreak; // Total sober days equals current streak
-      
-      // Update longest streak if needed
-      if (currentStreak > updatedProgress.longestStreak) {
-        updatedProgress.longestStreak = currentStreak;
+      try {
+        setSobrietyStartDate(normalizedDate);
+        
+        // Update the local progress state with the newly saved data
+        const updatedProgress = getUserProgress();
+        
+        // Calculate and update the current streak and total sober days
+        const currentStreak = daysBetween(normalizedDate);
+        updatedProgress.currentStreak = currentStreak;
+        updatedProgress.totalDaysSober = currentStreak; // Total sober days equals current streak
+        
+        // Update longest streak if needed
+        if (currentStreak > updatedProgress.longestStreak) {
+          updatedProgress.longestStreak = currentStreak;
+        }
+        
+        // Save updated progress
+        localStorage.setItem('recovery-app-progress', JSON.stringify(updatedProgress));
+        setProgress(updatedProgress);
+      } catch (error) {
+        console.error('Error saving sobriety date locally:', error);
+        toast.error('Could not update local sobriety date');
+        setIsLoading(false);
+        return;
       }
-      
-      // Save updated progress
-      localStorage.setItem('recovery-app-progress', JSON.stringify(updatedProgress));
-      setProgress(updatedProgress);
       
       // If user is logged in, also update Supabase
       if (user) {
@@ -207,7 +227,7 @@ export function useSobrietyDate() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedDate, user]);
 
   return {
     progress,

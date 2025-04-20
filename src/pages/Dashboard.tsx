@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getUserProgress, updateStreak } from '@/utils/storage';
 import SobrietyCounter from '@/components/SobrietyCounter';
 import MoodTracker from '@/components/MoodTracker';
@@ -14,38 +14,46 @@ import { toast } from 'sonner';
 import RefreshButton from '@/components/RefreshButton';
 
 const Dashboard: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
-    // Update streak on component mount to ensure it's always current
-    updateStreak();
-    
-    // Get user progress
-    const progress = getUserProgress();
-    
-    // Check for today's check-in
-    const today = new Date().toISOString().split('T')[0];
-    const hasTodayCheckIn = progress.checkIns.some(
-      checkIn => checkIn.date.split('T')[0] === today
-    );
-
-    // Check for newly achieved milestones to show toast notifications
-    const recentMilestones = progress.milestones.filter(m => {
-      if (!m.achieved || !m.date) return false;
+    try {
+      // Update streak on component mount to ensure it's always current
+      updateStreak();
       
-      // Check if milestone was achieved in the last day
-      const achievedDate = new Date(m.date);
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      // Get user progress
+      const progress = getUserProgress();
       
-      return achievedDate > oneDayAgo;
-    });
+      // Check for today's check-in
+      const today = new Date().toISOString().split('T')[0];
+      const hasTodayCheckIn = progress.checkIns.some(
+        checkIn => checkIn.date.split('T')[0] === today
+      );
 
-    // Show toast notifications for recent milestones
-    recentMilestones.forEach(milestone => {
-      toast.success(`Milestone achieved: ${milestone.name}!`, {
-        description: milestone.description,
-        duration: 5000
+      // Check for newly achieved milestones to show toast notifications
+      const recentMilestones = progress.milestones.filter(m => {
+        if (!m.achieved || !m.date) return false;
+        
+        // Check if milestone was achieved in the last day
+        const achievedDate = new Date(m.date);
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        
+        return achievedDate > oneDayAgo;
       });
-    });
+
+      // Show toast notifications for recent milestones
+      recentMilestones.forEach(milestone => {
+        toast.success(`Milestone achieved: ${milestone.name}!`, {
+          description: milestone.description,
+          duration: 5000
+        });
+      });
+    } catch (error) {
+      console.error('Error initializing dashboard:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
   
   const { milestones } = getUserProgress();
