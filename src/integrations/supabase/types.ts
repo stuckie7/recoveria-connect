@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      check_ins: {
+        Row: {
+          activities: Json | null
+          created_at: string
+          date: string
+          energy_level: string | null
+          id: string
+          mood: string
+          notes: string | null
+          sleep_quality: string | null
+          triggers: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activities?: Json | null
+          created_at?: string
+          date?: string
+          energy_level?: string | null
+          id?: string
+          mood: string
+          notes?: string | null
+          sleep_quality?: string | null
+          triggers?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activities?: Json | null
+          created_at?: string
+          date?: string
+          energy_level?: string | null
+          id?: string
+          mood?: string
+          notes?: string | null
+          sleep_quality?: string | null
+          triggers?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           comments: number | null

@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { Edit3, Check, X, Moon, Battery, Dumbbell, Heart } from 'lucide-react';
 import MoodTracker from './MoodTracker';
 import { Mood, SleepQuality, EnergyLevel, Activity } from '@/types';
-import { addCheckIn, getTriggers } from '@/utils/storage';
+import { getTriggers } from '@/utils/storage';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCheckIns } from '@/hooks/useCheckIns';
 
 const DailyCheckIn: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -20,6 +20,8 @@ const DailyCheckIn: React.FC = () => {
   const [activityType, setActivityType] = useState<Activity['type']>('meditation');
   const [activityDuration, setActivityDuration] = useState<number>(15);
   const [activityNotes, setActivityNotes] = useState('');
+
+  const { addCheckIn } = useCheckIns();
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -56,41 +58,45 @@ const DailyCheckIn: React.FC = () => {
     setActivities(prev => prev.filter((_, i) => i !== index));
   };
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedMood) {
       toast.error('Please select your mood first');
       return;
     }
     
-    const checkIn = {
-      date: new Date().toISOString(),
-      mood: selectedMood,
-      sleepQuality: sleepQuality || undefined,
-      energyLevel: energyLevel || undefined,
-      activities: activities.length > 0 ? activities : undefined,
-      triggers: selectedTriggers,
-      notes: notes,
-      strategies: [],
-      feelingBetter: false,
-    };
-    
-    addCheckIn(checkIn);
-    
-    toast.success('Daily check-in complete!', {
-      description: 'Thank you for checking in today.'
-    });
-    
-    // Reset form
-    setSelectedMood(null);
-    setSleepQuality(null);
-    setEnergyLevel(null);
-    setActivities([]);
-    setSelectedTriggers([]);
-    setNotes('');
-    setIsExpanded(false);
+    try {
+      const checkIn = {
+        date: new Date().toISOString(),
+        mood: selectedMood,
+        sleepQuality: sleepQuality || undefined,
+        energyLevel: energyLevel || undefined,
+        activities: activities.length > 0 ? activities : undefined,
+        triggers: selectedTriggers,
+        notes: notes,
+        strategies: [],
+        feelingBetter: false,
+      };
+      
+      await addCheckIn(checkIn);
+      
+      toast.success('Daily check-in complete!', {
+        description: 'Thank you for checking in today.'
+      });
+      
+      // Reset form
+      setSelectedMood(null);
+      setSleepQuality(null);
+      setEnergyLevel(null);
+      setActivities([]);
+      setSelectedTriggers([]);
+      setNotes('');
+      setIsExpanded(false);
+    } catch (error) {
+      console.error('Error saving check-in:', error);
+      toast.error('Failed to save check-in');
+    }
   };
   
-  // Group triggers by category
   const triggersByCategory = triggers.reduce((acc, trigger) => {
     if (!acc[trigger.category]) {
       acc[trigger.category] = [];
@@ -99,12 +105,10 @@ const DailyCheckIn: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof triggers>);
   
-  // Format category name for display
   const formatCategoryName = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
   };
 
-  // Helper function to render the sleep quality selector
   const renderSleepQualitySelector = () => {
     const options: {value: SleepQuality, label: string, color: string}[] = [
       { value: 'excellent', label: 'Excellent', color: 'bg-green-500' },
@@ -133,7 +137,6 @@ const DailyCheckIn: React.FC = () => {
     );
   };
 
-  // Helper function to render the energy level selector
   const renderEnergyLevelSelector = () => {
     const options: {value: EnergyLevel, label: string, icon: any, percentage: number}[] = [
       { value: 'high', label: 'High', icon: Battery, percentage: 90 },
@@ -201,7 +204,6 @@ const DailyCheckIn: React.FC = () => {
             </TabsList>
             
             <TabsContent value="mood" className="mt-4">
-              {/* Mood selector */}
               <h4 className="text-base font-medium mb-3">
                 How are you feeling today?
               </h4>
@@ -210,7 +212,6 @@ const DailyCheckIn: React.FC = () => {
                 selectedMood={selectedMood} 
               />
               
-              {/* Notes */}
               <div className="mt-6">
                 <h4 className="text-base font-medium mb-3">
                   Anything else to note? (optional)
@@ -226,7 +227,6 @@ const DailyCheckIn: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="physical" className="mt-4 space-y-6">
-              {/* Sleep quality */}
               <div>
                 <h4 className="text-base font-medium mb-2 flex items-center">
                   <Moon size={18} className="mr-2 text-primary" />
@@ -236,7 +236,6 @@ const DailyCheckIn: React.FC = () => {
                 {renderSleepQualitySelector()}
               </div>
               
-              {/* Energy level */}
               <div>
                 <h4 className="text-base font-medium mb-2 flex items-center">
                   <Battery size={18} className="mr-2 text-primary" />
@@ -248,7 +247,6 @@ const DailyCheckIn: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="triggers" className="mt-4">
-              {/* Triggers selector */}
               <div>
                 <h4 className="text-base font-medium mb-3">
                   Any triggers today? (optional)
@@ -293,7 +291,6 @@ const DailyCheckIn: React.FC = () => {
                 Activities Completed
               </h4>
               
-              {/* Activity form */}
               <div className="glass-card p-4 mb-4">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
@@ -348,7 +345,6 @@ const DailyCheckIn: React.FC = () => {
                 </button>
               </div>
               
-              {/* Activity list */}
               {activities.length > 0 ? (
                 <div className="space-y-2">
                   {activities.map((activity, index) => (
@@ -380,7 +376,6 @@ const DailyCheckIn: React.FC = () => {
             </TabsContent>
           </Tabs>
           
-          {/* Submit button */}
           <button
             onClick={handleSubmit}
             className="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl shadow-lg hover:opacity-90 transition-opacity"

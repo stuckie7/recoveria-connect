@@ -1,8 +1,7 @@
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getUserProgress } from '@/utils/storage';
-import { Mood, CheckIn } from '@/types';
+import { useCheckIns } from '@/hooks/useCheckIns';
+import { Mood } from '@/types';
 
 // Helper function to convert mood to numeric value
 const moodToValue = (mood: Mood): number => {
@@ -16,49 +15,57 @@ const moodToValue = (mood: Mood): number => {
   }
 };
 
-// Create chart data from check-ins
-const createChartData = (checkIns: CheckIn[], days: number = 7) => {
-  // Initialize empty data array with the last 'days' dates
-  const data: { date: string; mood: number; formattedDate: string }[] = [];
-  const today = new Date();
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(today.getDate() - i);
-    
-    const dateString = date.toISOString().split('T')[0];
-    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    
-    data.push({
-      date: dateString,
-      mood: 0, // Default value, will be updated if check-in exists
-      formattedDate,
-    });
-  }
-  
-  // Fill in mood data from check-ins
-  checkIns.forEach(checkIn => {
-    const checkInDate = checkIn.date.split('T')[0];
-    const dataPoint = data.find(d => d.date === checkInDate);
-    
-    if (dataPoint) {
-      dataPoint.mood = moodToValue(checkIn.mood);
-    }
-  });
-  
-  return data;
-};
-
 const ProgressChart: React.FC = () => {
+  const { checkIns, isLoading } = useCheckIns();
+  
+  if (isLoading) {
+    return (
+      <div className="neo-card h-64 animate-fade-in">
+        <h3 className="text-lg font-medium mb-4">Mood Trends</h3>
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const createChartData = (checkIns: CheckIn[], days: number = 7) => {
+    const data: { date: string; mood: number; formattedDate: string }[] = [];
+    const today = new Date();
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+      
+      const dateString = date.toISOString().split('T')[0];
+      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      data.push({
+        date: dateString,
+        mood: 0,
+        formattedDate,
+      });
+    }
+    
+    checkIns.forEach(checkIn => {
+      const checkInDate = checkIn.date.split('T')[0];
+      const dataPoint = data.find(d => d.date === checkInDate);
+      
+      if (dataPoint) {
+        dataPoint.mood = moodToValue(checkIn.mood);
+      }
+    });
+    
+    return data;
+  };
+
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    const progress = getUserProgress();
-    const data = createChartData(progress.checkIns);
+    const data = createChartData(checkIns);
     setChartData(data);
-  }, []);
+  }, [checkIns]);
 
-  // Custom tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const moodValue = payload[0].value;

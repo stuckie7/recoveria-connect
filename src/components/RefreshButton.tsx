@@ -2,10 +2,14 @@
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useCheckIns } from '@/hooks/useCheckIns';
 
 const RefreshButton = () => {
-  const handleRefresh = () => {
+  const { refreshCheckIns } = useCheckIns();
+
+  const handleRefresh = async () => {
     toast.info('Refreshing app...');
+    await refreshCheckIns();
     window.location.reload();
   };
 
@@ -14,7 +18,7 @@ const RefreshButton = () => {
       onClick={handleRefresh}
       variant="outline"
       size="icon"
-      className="fixed top-16 left-4 z-50 rounded-full shadow-lg"
+      className="fixed bottom-4 left-4 z-50 rounded-full shadow-lg"
       title="Refresh app"
     >
       <RefreshCw className="h-4 w-4" />
