@@ -15,7 +15,7 @@ export const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>): Promise<CheckIn>
   const { data, error } = await supabase
     .from('check_ins')
     .insert([{
-      user_id: checkIn.user_id || supabase.auth.getUser().then(res => res.data.user?.id),
+      user_id: await supabase.auth.getUser().then(res => res.data.user?.id),
       mood: checkIn.mood,
       sleep_quality: checkIn.sleepQuality,
       energy_level: checkIn.energyLevel,
@@ -36,10 +36,10 @@ export const addCheckIn = async (checkIn: Omit<CheckIn, 'id'>): Promise<CheckIn>
   const newCheckIn: CheckIn = {
     id: data.id,
     date: data.date,
-    mood: data.mood,
-    sleepQuality: data.sleep_quality,
-    energyLevel: data.energy_level,
-    activities: data.activities || [],
+    mood: data.mood as CheckIn['mood'],
+    sleepQuality: data.sleep_quality as CheckIn['sleepQuality'],
+    energyLevel: data.energy_level as CheckIn['energyLevel'],
+    activities: Array.isArray(data.activities) ? data.activities : [],
     triggers: data.triggers || [],
     notes: data.notes || '',
     strategies: [], // Default empty array

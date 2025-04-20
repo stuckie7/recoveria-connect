@@ -31,7 +31,7 @@ export function useCheckIns() {
         mood: item.mood as CheckIn['mood'],
         sleepQuality: item.sleep_quality as CheckIn['sleepQuality'],
         energyLevel: item.energy_level as CheckIn['energyLevel'],
-        activities: item.activities || [],
+        activities: Array.isArray(item.activities) ? item.activities : [],
         triggers: item.triggers || [],
         notes: item.notes || '',
         strategies: [], // Default empty array for strategies
@@ -73,10 +73,10 @@ export function useCheckIns() {
       const newCheckIn: CheckIn = {
         id: data.id,
         date: data.date,
-        mood: data.mood,
-        sleepQuality: data.sleep_quality,
-        energyLevel: data.energy_level,
-        activities: data.activities || [],
+        mood: data.mood as CheckIn['mood'],
+        sleepQuality: data.sleep_quality as CheckIn['sleepQuality'],
+        energyLevel: data.energy_level as CheckIn['energyLevel'],
+        activities: Array.isArray(data.activities) ? data.activities : [],
         triggers: data.triggers || [],
         notes: data.notes || '',
         strategies: [],
