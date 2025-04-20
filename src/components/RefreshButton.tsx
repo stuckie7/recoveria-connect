@@ -3,8 +3,13 @@ import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCheckIns } from '@/hooks/useCheckIns';
+import { cn } from '@/lib/utils';
 
-const RefreshButton = () => {
+interface RefreshButtonProps {
+  className?: string;
+}
+
+const RefreshButton: React.FC<RefreshButtonProps> = ({ className }) => {
   const { refreshCheckIns } = useCheckIns();
 
   const handleRefresh = async () => {
@@ -18,7 +23,10 @@ const RefreshButton = () => {
       onClick={handleRefresh}
       variant="outline"
       size="icon"
-      className="fixed bottom-4 left-4 z-50 rounded-full shadow-lg"
+      className={cn(
+        "rounded-full shadow-lg", 
+        className
+      )}
       title="Refresh app"
     >
       <RefreshCw className="h-4 w-4" />

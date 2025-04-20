@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { getUserProgress, updateStreak } from '@/utils/storage';
 import SobrietyCounter from '@/components/SobrietyCounter';
@@ -11,6 +10,7 @@ import MilestoneCard from '@/components/MilestoneCard';
 import RelapsePrediction from '@/components/RelapsePrediction';
 import { UpcomingMilestones } from '@/components/profile/personal-info';
 import { toast } from 'sonner';
+import RefreshButton from '@/components/RefreshButton';
 
 const Dashboard: React.FC = () => {
   useEffect(() => {
@@ -55,7 +55,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="py-20 px-4 min-h-screen bg-recovery-fun-iris">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-xl px-6 py-4 mb-6 shadow-md">
+        <div className="bg-white rounded-xl px-6 py-4 mb-6 shadow-md flex items-center">
+          <RefreshButton className="mr-4" />
           <h1 className="text-3xl font-bold text-center lg:text-left text-purple-900">Your Recovery Journey</h1>
         </div>
         
