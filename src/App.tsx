@@ -18,6 +18,7 @@ import Journal from "./pages/Journal";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import RefreshButton from "./components/RefreshButton";
+import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,20 +50,21 @@ const App = () => (
               <main className="flex-grow">
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
-                  <Route path="/welcome" element={<WelcomePage />} />
-                  <Route path="/404" element={<NotFound />} />
-                  
-                  <Route element={<OnboardingGuard />}>
-                    <Route element={<PrivateRoute />}>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/community" element={<Community />} />
-                      <Route path="/resources" element={<Resources />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/journal" element={<Journal />} />
+                  <Route element={<AuthGuard />}>
+                    <Route path="/welcome" element={<WelcomePage />} />
+                    <Route path="/404" element={<NotFound />} />
+                    
+                    <Route element={<OnboardingGuard />}>
+                      <Route element={<PrivateRoute />}>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/community" element={<Community />} />
+                        <Route path="/resources" element={<Resources />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/journal" element={<Journal />} />
+                      </Route>
                     </Route>
+                    <Route path="*" element={<Navigate to="/404" replace />} />
                   </Route>
-                  
-                  <Route path="*" element={<Navigate to="/404" replace />} />
                 </Routes>
               </main>
               <EmergencySupport />

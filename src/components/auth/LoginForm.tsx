@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { supabase, ensureUserProfile } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   loading: boolean;
@@ -14,6 +14,7 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
     setLoading(true);
     
     try {
-      // Step 1: Attempt login
       const { data: userData, error: userError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -61,18 +61,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
         return;
       }
       
-      // Step 2: Ensure user profile exists before proceeding
       if (userData?.user) {
         try {
           console.log("Login successful, creating/checking profile...");
           
-          // Wait briefly before profile operations to ensure auth is complete
           await new Promise(resolve => setTimeout(resolve, 500));
           
           let profileSuccess = false;
           const maxAttempts = 3;
           
-          // Retry profile creation multiple times if necessary
           for (let i = 0; i < maxAttempts; i++) {
             try {
               profileSuccess = await ensureUserProfile(userData.user.id, userData.user.email);
@@ -81,12 +78,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
                 break;
               }
               
-              // Wait between retries
               console.log(`Profile creation attempt ${i+1} didn't succeed, retrying...`);
               await new Promise(resolve => setTimeout(resolve, 500));
             } catch (err) {
               console.error(`Profile creation attempt ${i+1} failed:`, err);
-              // Continue with retries
               await new Promise(resolve => setTimeout(resolve, 500));
             }
           }
@@ -95,14 +90,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ loading, setLoading }) => 
             console.warn("Failed to create profile after multiple attempts, but continuing login flow");
           }
           
-          // If we get here, login was successful regardless of profile status
           toast({
             title: "Success!",
             description: "You are now logged in",
           });
         } catch (profileError) {
           console.error('Error ensuring user profile exists:', profileError);
-          // Continue login flow despite profile error
           toast({
             title: "Success!",
             description: "You are now logged in, but profile setup had issues",
